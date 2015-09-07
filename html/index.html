@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>JQuery RIAサンプル一覧</title>
+<meta name="robots" content="index,follow,noodp" />
+<meta name="keywords" content="***,***" />
+<meta name="description" content="******" />
+<link rel="stylesheet" href="../css/default.css" type="text/css" media="all" />
+<style type="text/css">
+body{background:#fff;padding:10px;color:#333;font:75% 'メイリオ',Meiryo,'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','ＭＳ Ｐゴシック',MS-PGothic,sans-serif;}
+hr{display:none;}
+h1{font-size:200%;}
+h2{border:solid 1px #333;background:#333;margin:1em 0;padding:.2em 10px;width:450px;color:#fff;}
+ol,
+ul,
+table{margin:0 0 2em;}
+li{margin:0 0 .3em;}
+.caution{color:#ff3366;}
+.new{display:inline-block;border-radius:2px;background:#88c502;padding:2px;font-weight:normal;font-size:91.7%;line-height:1;color:#fff;}
+.update{display:inline-block;border-radius:2px;background:#e63082;padding:2px;font-weight:normal;font-size:91.7%;line-height:1;color:#fff;}
+.working{display:inline-block;border-radius:2px;background:#9c865f;padding:2px;font-weight:normal;font-size:91.7%;line-height:1;color:#fff;}
+iframe{width:80%;}
+#page-top {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	font-size: 77%;
+	z-index:9999;
+}
+#page-top a {
+	background: #666;
+	text-decoration: none;
+	color: #fff;
+	width: 100px;
+	padding: 30px 0;
+	text-align: center;
+	display: block;
+	border-radius: 5px;
+}
+#page-top a:hover {
+	text-decoration: none;
+	background: #999;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+<script type="text/javascript">
+<!--
+$(function(){
+
+	// ページトップに戻るボタンを表示
+	(function () {
+		$('<p id="page-top"><a href="#wrap">PAGE TOP</a></p>').appendTo('body');
+		var showFlug = false;
+		var topBtn = $('#page-top');
+		topBtn.css('bottom', '-100px');
+		var showFlug = false;
+		//スクロールが100に達したらボタン表示
+		$(window).scroll(function () {
+			if ($(this).scrollTop() > 100) {
+				if (showFlug == false) {
+					showFlug = true;
+					topBtn.stop().animate({'bottom' : '20px'}, 200); 
+				}
+			} else {
+				if (showFlug) {
+					showFlug = false;
+					topBtn.stop().animate({'bottom' : '-100px'}, 200); 
+				}
+			}
+		});
+		//スクロールしてトップ
+		topBtn.click(function () {
+			$('body,html').animate({
+				scrollTop: 0
+			}, 500);
+			return false;
+		});
+	}());
+
+	// ページ内リンク
+	$('.scrollLink').each(function(e) {
+		var self = $(this),
+			scrollTo = self.data('target') ;
+		$.mynaviMove({
+			target : self,
+			to : scrollTo
+		});
+	});
+
+
+});
+//-->
+</script>
+</head>
+
+<body> 
+
+<h1>JQuery RIAサンプル</h1>
+
+<p class="caution">
+JQuery RIAサンプル一覧です。<br />
+</p>
+
+<h2 class="title">メニュー関連</h2>
+<ol>
+<li><a href="#" data-target="#naviMenu" class="scrollLink">グローバルナビ</a></li>
+</ol><hr />
+
+<h2 class="title">メッセージ関連</h2>
+<ol>
+<li><a href="#" data-target="#tooltip" class="scrollLink">ツールチップ</a></li>
+<li><a href="#" data-target="#popupMessage" class="scrollLink">ポップアップメッセージ</a></li>
+<li><a href="#" data-target="#timelineMessage" class="scrollLink">タイムラインメッセージ<span class="new">NEW</span></a></li>
+</ol><hr />
+
+<h2 class="title">フォーム関連</h2>
+<ol>
+<li><a href="#" data-target="#tableSort" class="scrollLink">テーブルソート</a></li>
+<li><a href="#" data-target="#sortable" class="scrollLink">ドラッグソート</a></li>
+<li><a href="#" data-target="#igoogleMenu" class="scrollLink">ポートレット</a></li>
+<li><a href="#" data-target="#autoComplete" class="scrollLink">入力補完</a></li>
+<li><a href="#" data-target="#datePicker" class="scrollLink">日付入力</a></li>
+<li><a href="#" data-target="#multiCallender" class="scrollLink">マルチカレンダー</a></li>
+<li><a href="#" data-target="#checkRelevance" class="scrollLink">関連チェック</a></li>
+<li><a href="#" data-target="#textCounter" class="scrollLink">テキストカウンター</a></li>
+<li><a href="#" data-target="#shortCutText" class="scrollLink">テキスト省略</a></li>
+<li><a href="#" data-target="#blogEditor" class="scrollLink">ブログエディター</a></li>
+<li><a href="#" data-target="#lightbox" class="scrollLink">ライトボックス</a></li>
+<li><a href="#" data-target="#fileUpload" class="scrollLink">ファイルアップロード</a></li>
+<li><a href="#" data-target="#progressbar" class="scrollLink">プログレスバー</a></li>
+<li><a href="#" data-target="#preview" class="scrollLink">プレビュー</a></li>
+</ol><hr />
+
+<h2 class="title">API関連</h2>
+<ol>
+<li><a href="#" data-target="#mapGoogle" class="scrollLink">地図API(Google)</a> </li>
+<li><a href="#" data-target="#mapYahoo" class="scrollLink">地図API(Yahoo)</a></li>
+<li><a href="#" data-target="#photoFinder" class="scrollLink">画像検索API</a></li>
+</ol><hr />
+
+<h2 class="title">画像・動画関連</h2>
+<ol>
+<li><a href="#" data-target="#imageLazyLoader" class="scrollLink">画像遅延ローダー</a></li>
+<li><a href="#" data-target="#imageEdit" class="scrollLink">画像編集</a></li>
+<li><a href="#" data-target="#photoslider" class="scrollLink">画像スライダー</a></li>
+<li><a href="#" data-target="#slideshow" class="scrollLink">画像スライドショー</a></li>
+<li><a href="#" data-target="#zoomPhotoPanel" class="scrollLink">拡大写真パネル</a></li>
+<li><a href="#" data-target="#inspirationBoad" class="scrollLink">インスピレーションボード</a><span class="new">NEW</span></li>
+<li><a href="#" data-target="#movie" class="scrollLink">動画（Youtube）</a></li>
+</ol><hr />
+
+<h2 class="title">SNS関連</h2>
+<ol>
+<li><a href="#" data-target="#socialButton" class="scrollLink">ソーシャルボタン</a> </li>
+</ol><hr />
+
+
+<p>グローバルナビ</p>
+<iframe id="naviMenu" src="naviMenu.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>ツールチップ</p>
+<iframe id="tooltip" src="tooltip.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>ポップアップメッセージ</p>
+<iframe id="popupMessage" src="popupMessage.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>タイムラインメッセージ</p>
+<iframe id="timelineMessage" src="timelineMessage.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>テーブルソート</p>
+<iframe id="tableSort" src="tableSort.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>ドラッグソート(jquery-ui)</p>
+<iframe id="sortable" src="sortable.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>ポートレット(jquery-ui)</p>
+<iframe id="igoogleMenu" src="igoogleMenu.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>入力補完(jquery-ui)</p>
+<iframe id="autoComplete" src="autoComplete.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>日付入力(jquery-ui)</p>
+<iframe id="datePicker" src="datePicker.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>マルチカレンダー</p>
+<iframe id="multiCallender" src="multiCallender.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>関連チェック</p>
+<iframe id="checkRelevance" src="checkRelevance.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>テキストカウンター</p>
+<iframe id="textCounter" src="textCounter.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>テキスト省略</p>
+<iframe id="shortCutText" src="shortCutText.html" scrolling="no" frameborder="0" align="center" hspace="0" height="500px"></iframe>
+
+<p>ブログエディター</p>
+<iframe id="blogEditor" src="blogEditor.html" scrolling="no" frameborder="0" align="center" hspace="0" height="300px"></iframe>
+
+<p>ライトボックス</p>
+<iframe id="lightbox" src="lightbox.html" scrolling="no" frameborder="0" align="center" hspace="0" height="500px"></iframe>
+
+<p>ファイルアップロード</p>
+<iframe id="fileUpload" src="fileUpload.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>プログレスバー(jquery-ui)</p>
+<iframe id="progressbar" src="progressbar.html" scrolling="no" frameborder="0" align="center" hspace="0" height="100px"></iframe>
+
+<p>プレビュー</p>
+<div id="preview">
+<form name="registForm" id="registForm">
+<input type="button" value="プレビュー" id="previewBtn" />
+</form>
+</div>
+<script type="text/javascript">
+<!--
+$(function() {
+	$('#previewBtn').click(function() {
+
+		var formClone = $('#registForm').clone();
+		formClone
+			.attr('target', 'previewwindow')
+			.attr('action', 'preview.html');
+
+		$('body').append(formClone);
+
+		var p = $.openDialog({url:'about:blank', name:'previewwindow', style:'width=1124px,height=768px,menubar=no,toolbar=no,scrollbars=yes'});
+
+		formClone.submit();
+		formClone.remove();
+	});
+});
+// -->
+</script>
+
+<p>地図API(Google)</p>
+<iframe id="mapGoogle" src="mapGoogle.html" scrolling="no" frameborder="0" align="center" hspace="0" height="400px"></iframe>
+
+<p>地図API(Yahoo)</p>
+<iframe id="mapYahoo" src="mapYahoo.html" scrolling="no" frameborder="0" align="center" hspace="0" height="400px"></iframe>
+
+<p>画像検索API</p>
+<iframe id="photoFinder" src="photoFinder.html" scrolling="no" frameborder="0" align="center" hspace="0" height="400px"></iframe>
+
+<p>画像遅延ローダー</p>
+<iframe id="imageLazyLoader" src="imageLazyLoader.html" scrolling="yes" frameborder="0" align="center" hspace="0" height="500px"></iframe>
+
+<p>画像編集</p>
+<iframe id="imageEdit" src="imageEdit.html" scrolling="no" frameborder="0" align="center" hspace="0" height="600px"></iframe>
+
+<p>画像スライダー</p>
+<iframe id="photoslider" src="photoSlider.html" scrolling="no" frameborder="0" align="center" hspace="0" height="1500px"></iframe>
+
+<p>画像スライドショー</p>
+<iframe id="slideshow" src="slideshow.html" scrolling="no" frameborder="0" align="center" hspace="0" height="500px"></iframe>
+
+<p>拡大写真パネル</p>
+<iframe id="zoomPhotoPanel" src="zoomPhotoPanel.html" scrolling="no" frameborder="0" align="center" hspace="0" height="700px"></iframe>
+
+<p>インスピレーションボード</p>
+<iframe id="inspirationBoad" src="inspirationBoad.html" scrolling="no" frameborder="0" align="center" hspace="0" height="600px"></iframe>
+
+<p>動画(Youtube)</p>
+<iframe id="movie" src="youtube.html" scrolling="no" frameborder="0" align="center" hspace="0" height="400px"></iframe>
+
+<p>ソーシャルボタン</p>
+<iframe id="socialButton" src="socialButton.html" scrolling="no" frameborder="0" align="center" hspace="0" height="200px"></iframe>
+
+<p>おまけ</p>
+<p>ざわざわした後に何かが起こります。下のリンクをツールバーにドラッグするとブックマークレットにもなるよ♪</p>
+<a href="javascript:(function(){var s=document.createElement('scr'+'ipt');s.charset='UTF-8';s.language='javascr'+'ipt';s.type='text/javascr'+'ipt';var d=new Date;s.src='http://isystk.github.com/kaiji/js?u='+escape(document.location.href)+'&amp;d='+d.getMilliseconds();document.body.appendChild(s);})();">Web Hack カイジ</a>
+
+
+<br/>
+<br/>
+
+</body>
+</html>

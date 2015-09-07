@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+table {
+width: 400px;
+height: 200px;
+border: 2px #2b2b2b solid;
+}
+
+th{
+text-align:center;
+}
+td, th {
+border: 2px #2b2b2b solid;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+
+$(function(){
+
+$('#js-sortTable').tableSort();
+
+});
+
+//-->
+</script>
+
+</head>
+<body>
+<table id="js-sortTable">
+<thead>
+<tr>
+	<th class="js-sort" data-type="string">名前<span></span><br/></th>
+	<th class="js-sort" data-type="integer">得点<span></span><br/></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>Bさん<br/></td>
+	<td>40<br/></td>
+</tr>
+<tr>
+	<td>Cさん<br/></td>
+	<td>80<br/></td>
+</tr>
+<tr>
+	<td>Dさん<br/></td>
+	<td>5<br/></td>
+</tr>
+<tr>
+	<td>Aさん<br/></td>
+	<td>20<br/></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

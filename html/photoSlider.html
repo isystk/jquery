@@ -1,0 +1,451 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+.photo5{
+width:696px;
+}
+.photo5 .carousel .screen{
+height: 80px;
+overflow: hidden;
+left:98px;
+width:505px;
+}
+.photo1{
+width:180px;
+}
+.photo1 .carousel .screen{
+height: 80px;
+overflow: hidden;
+left:42px;
+width:100px;
+}
+.carousel .photos{
+margin:0;
+text-align:center;
+}
+.carousel .photos p{
+float:left;
+margin:0 5px 0 0;
+border:solid 1px #dedede;
+background:#fff;
+width:88px;
+padding:3px;
+}
+
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/plugins/jquery.photoSlider.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+<script type="text/javascript">
+<!--
+$(function() {
+
+	$('#slide1 .pageNo').text(1 + '/' + Math.ceil($('#slide1 li').size()/5));
+	var slide1 = $('#slide1 .screen').mynavislider({
+		'easing': 'easeInOutCirc',
+		'carousel': false,
+		'backBtnKey': '#slide1 #gallery-back',
+		'nextBtnKey': '#slide1 #gallery-next',
+		'slideCallBack': function(data) {
+			$('#slide1 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+		}
+	});
+	$('#slide1 .changePage').click(function(e) {
+		e.preventDefault();
+		slide1.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.SLIDE);
+	});
+
+	$('#slide2 .pageNo').text(1 + '/' + Math.ceil($('#slide2 li').size()/5));
+	var slide2 = $('#slide2 .screen').mynavislider({
+		'easing': 'easeInOutCirc',
+		'carousel': true,
+		'backBtnKey': '#slide2 #gallery-back',
+		'nextBtnKey': '#slide2 #gallery-next',
+		'autoSlide': true,
+		'hoverPause': true,
+		'slideCallBack': function(data) {
+			$('#slide2 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+		}
+	});
+	$('#slide2 .changePage').click(function(e) {
+		e.preventDefault();
+		slide2.changePage($(this).data('pageno'));
+	});
+	$('#slide2 .autoSlideFlg').click(function(e) {
+		var self = $(this);
+		if (self.is(':checked')) {
+			slide2.autoSlide.start();
+		} else {
+			slide2.autoSlide.stop();
+		}
+	});
+
+	$('#slide5 .pageNo').text(1 + '/' + Math.ceil($('#slide5 li').size()/1));
+	var slide5 = $('#slide5 .screen').mynavislider({
+		'easing': 'easeInOutCirc',
+		'shift' : 1,
+		'dispCount' : 3,
+		'carousel': true,
+		'backBtnKey': '#slide5 #gallery-back',
+		'nextBtnKey': '#slide5 #gallery-next',
+		'slideCallBack': function(data) {
+			$('#slide5 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+		}
+	});
+	$('#slide5 .changePage').click(function(e) {
+		e.preventDefault();
+		slide5.changePage($(this).data('pageno'));
+	});
+
+	$('#slide3 .pageNo').text(1 + '/' + Math.ceil($('#slide3 li').size()));
+	var slide3 = $('#slide3 .screen').mynavislider({
+		'easing': 'easeInOutCirc',
+		'shift' : 1,
+		'carousel': false,
+		'backBtnKey': '#slide3 #gallery-back',
+		'nextBtnKey': '#slide3 #gallery-next',
+		'isMouseDrag': true,
+		'slideCallBack': function(data) {
+			$('#slide3 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+		}
+	});
+	$('#slide3 .changePage').click(function(e) {
+		e.preventDefault();
+		slide3.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.FADE);
+	});
+
+
+	$('#slide4 .pageNo').text(1 + '/' + Math.ceil($('#slide4 li').size()));
+	var slide4 = $('#slide4 .screen').mynavislider({
+		'easing': 'easeInOutCirc',
+		'shift' : 1,
+		'carousel': true,
+		'backBtnKey': '#slide4 #gallery-back',
+		'nextBtnKey': '#slide4 #gallery-next',
+		'slideCallBack': function(data) {
+			$('#slide4 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+		}
+	});
+	$('#slide4 .changePage').click(function(e) {
+		e.preventDefault();
+		slide4.changePage($(this).data('pageno'));
+	});
+
+});
+// -->
+</script>
+</head>
+<body>
+<p>１ページ５枚：ローテーションなし</p>
+<div id="slide1" class="photo photo5">
+	<div class="carousel">
+		<p class="button back" id="gallery-back"><a href="#"><img src="../img/btn_carousel_back.png" alt="前へ" width="30" height="30" class="imgover"></a></p>
+		<div class="screen position-relative">
+			<ul class="photos " style="width: 505px; " id="gallery-slider" data-pos="0">
+				<li>
+					<p>
+						<img src="../img/photo/photo1.jpg" itemprop="image" class="image" alt="画像１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo2.jpg" itemprop="image" class="image" alt="画像２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo3.jpg" itemprop="image" class="image" alt="画像３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo4.jpg" itemprop="image" class="image" alt="画像４" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo5.jpg" itemprop="image" class="image" alt="画像５" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo6.jpg" itemprop="image" class="image" alt="画像６" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo7.jpg" itemprop="image" class="image" alt="画像７" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo8.jpg" itemprop="image" class="image" alt="画像８" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo9.jpg" itemprop="image" class="image" alt="画像９" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo10.jpg" itemprop="image" class="image" alt="画像１０" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo11.jpg" itemprop="image" class="image" alt="画像１１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo12.jpg" itemprop="image" class="image" alt="画像１２" width="88" height="66">
+					</p>
+				</li>
+			</ul>
+		</div>
+		<p class="button next" id="gallery-next"><a href="#"><img src="../img/btn_carousel_next.png" alt="次へ" width="30" height="30" class="imgover"></a></p>
+		<p><span class="pageNo"></span></p>
+	</div>
+	<a href="#" class="changePage" data-pageno="1">1ページ目を表示(スライド)</a>
+	<a href="#" class="changePage" data-pageno="2">2ページ目を表示(スライド)</a>
+	<a href="#" class="changePage" data-pageno="3">3ページ目を表示(スライド)</a>
+	<a href="#" class="changePage" data-pageno="4">4ページ目を表示(スライド)</a>
+
+</div>
+
+<br/>
+
+<p>１ページ５枚：ローテーションあり 自動スライド</p>
+<div id="slide2" class="photo photo5">
+	<div class="carousel">
+		<p class="button back" id="gallery-back"><a href="#"><img src="../img/btn_carousel_back.png" alt="前へ" width="30" height="30" class="imgover"></a></p>
+		<div class="screen position-relative">
+			<ul class="photos " style="width: 505px; " id="gallery-slider" data-pos="0">
+				<li>
+					<p>
+						<img src="../img/photo/photo1.jpg" itemprop="image" class="image" alt="画像１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo2.jpg" itemprop="image" class="image" alt="画像２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo3.jpg" itemprop="image" class="image" alt="画像３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo4.jpg" itemprop="image" class="image" alt="画像４" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo5.jpg" itemprop="image" class="image" alt="画像５" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo6.jpg" itemprop="image" class="image" alt="画像６" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo7.jpg" itemprop="image" class="image" alt="画像７" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo8.jpg" itemprop="image" class="image" alt="画像８" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo9.jpg" itemprop="image" class="image" alt="画像９" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo10.jpg" itemprop="image" class="image" alt="画像１０" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo11.jpg" itemprop="image" class="image" alt="画像１１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo12.jpg" itemprop="image" class="image" alt="画像１２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo13.jpg" itemprop="image" class="image" alt="画像１３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo14.jpg" itemprop="image" class="image" alt="画像１４" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo15.jpg" itemprop="image" class="image" alt="画像１５" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo16.jpg" itemprop="image" class="image" alt="画像１６" width="88" height="66">
+					</p>
+				</li>
+			</ul>
+		</div>
+		<p class="button next" id="gallery-next"><a href="#"><img src="../img/btn_carousel_next.png" alt="次へ" width="30" height="30" class="imgover"></a></p>
+		<p><span class="pageNo"></span></p>
+	</div>
+	<a href="#" class="changePage" data-pageno="1">1ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="2">2ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="3">3ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="4">4ページ目を表示</a>
+	<p style="text-align:right"><a href="#"><label>自動スライド<input type="checkbox" checked="checked" class="autoSlideFlg"/></label></a></p>
+</div>
+
+
+<br/>
+
+<p>１ページ３枚：ローテーションあり シフト１</p>
+<div id="slide5" class="photo photo5" style="width: 496px;">
+	<div class="carousel">
+		<p class="button back" id="gallery-back"><a href="#"><img src="../img/btn_carousel_back.png" alt="前へ" width="30" height="30" class="imgover"></a></p>
+		<div class="screen position-relative" style="width: 303px">
+			<ul class="photos" >
+				<li>
+					<p>
+						<img src="../img/photo/photo1.jpg" itemprop="image" class="image" alt="画像１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo2.jpg" itemprop="image" class="image" alt="画像２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo3.jpg" itemprop="image" class="image" alt="画像３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo4.jpg" itemprop="image" class="image" alt="画像４" width="88" height="66">
+					</p>
+				</li>
+			</ul>
+		</div>
+		<p class="button next" id="gallery-next"><a href="#"><img src="../img/btn_carousel_next.png" alt="次へ" width="30" height="30" class="imgover"></a></p>
+		<p><span class="pageNo"></span></p>
+	</div>
+	<a href="#" class="changePage" data-pageno="1">1ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="2">2ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="3">3ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="4">4ページ目を表示</a>
+</div>
+
+<br/>
+
+<p>１ページ１枚：ローテーションなし スワイプ可能</p>
+<div id="slide3" class="photo photo1">
+	<div class="carousel">
+		<p class="button back" id="gallery-back"><a href="#"><img src="../img/btn_carousel_back.png" alt="前へ" width="30" height="30" class="imgover"></a></p>
+		<div class="screen position-relative">
+			<ul class="photos " style="width: 505px; " id="gallery-slider" data-pos="0">
+				<li>
+					<p>
+						<img src="../img/photo/photo1.jpg" itemprop="image" class="image" alt="画像１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo2.jpg" itemprop="image" class="image" alt="画像２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo3.jpg" itemprop="image" class="image" alt="画像３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo4.jpg" itemprop="image" class="image" alt="画像４" width="88" height="66">
+					</p>
+				</li>
+			</ul>
+		</div>
+		<p class="button next" id="gallery-next"><a href="#"><img src="../img/btn_carousel_next.png" alt="次へ" width="30" height="30" class="imgover"></a></p>
+		<p><span class="pageNo"></span></p>
+	</div>
+	<a href="#" class="changePage" data-pageno="1">1ページ目を表示(フェード)</a>
+	<a href="#" class="changePage" data-pageno="2">2ページ目を表示(フェード)</a>
+	<a href="#" class="changePage" data-pageno="3">3ページ目を表示(フェード)</a>
+	<a href="#" class="changePage" data-pageno="4">4ページ目を表示(フェード)</a>
+
+</div>
+
+<br/>
+
+<p>１ページ１枚：ローテーションあり</p>
+<div id="slide4" class="photo photo1">
+	<div class="carousel">
+		<p class="button back" id="gallery-back"><a href="#"><img src="../img/btn_carousel_back.png" alt="前へ" width="30" height="30" class="imgover"></a></p>
+		<div class="screen position-relative">
+			<ul class="photos " style="width: 505px; " id="gallery-slider" data-pos="0">
+				<li>
+					<p>
+						<img src="../img/photo/photo1.jpg" itemprop="image" class="image" alt="画像１" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo2.jpg" itemprop="image" class="image" alt="画像２" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo3.jpg" itemprop="image" class="image" alt="画像３" width="88" height="66">
+					</p>
+				</li>
+				<li>
+					<p>
+						<img src="../img/photo/photo4.jpg" itemprop="image" class="image" alt="画像４" width="88" height="66">
+					</p>
+				</li>
+			</ul>
+		</div>
+		<p class="button next" id="gallery-next"><a href="#"><img src="../img/btn_carousel_next.png" alt="次へ" width="30" height="30" class="imgover"></a></p>
+		<p><span class="pageNo"></span></p>
+	</div>
+	<a href="#" class="changePage" data-pageno="1">1ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="2">2ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="3">3ページ目を表示</a>
+	<a href="#" class="changePage" data-pageno="4">4ページ目を表示</a>
+
+</div>
+</body>
+</html>
