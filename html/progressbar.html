@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+.ui-progressbar{
+width:200px;
+height:10px;
+}
+.ui-progressbar-value{
+background:red;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+
+$(function(){
+
+	$("#progressbar").progressbar({value: 0});
+	$('#percentText').text('0%');
+
+	// 「実行」ボタン押下時
+	$('#buttonExcute').click(function(e){
+		e.preventDefault();
+
+		// 処理の起動に成功したら、プログレスバーを開始する。
+		beginUpload();
+
+	});
+
+	function beginUpload() {
+
+		var completed = 0;
+		var total = 100;
+
+		var i = setInterval(function() {
+			completed = completed + 20;
+			var percentage = Math.floor(100 * parseInt(completed) / parseInt(total));
+
+			$("#progressbar").progressbar({
+				value: percentage,
+				change: function(event) {
+					$('#percentText').text(percentage + '%');
+
+					if (percentage === 100) {
+						clearInterval(i);
+						$("#progressbar").progressbar({value: 0});
+						$('#percentText').text('0%');
+					}
+				}
+			});
+
+		}, 500);
+	}
+
+});
+
+// -->
+</script>
+</head>
+<body>
+<div style="margin:5px;">
+	<div>
+		<div id="progressbar"></div>
+		<span id="percentText"></span>
+	</div>
+	<p><input type="button" id="buttonExcute" name="buttonExcute" value="実行"></p>
+</div>
+</body>
+</html>

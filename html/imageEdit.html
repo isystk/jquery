@@ -1,0 +1,420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+.imgareaselect-border1 {
+    background: url('../img/imgareaselect.border-anim-v.gif') repeat-y left top;
+}
+
+.imgareaselect-border2 {
+    background: url('../img/imgareaselect.border-anim-h.gif') repeat-x left top;
+}
+
+.imgareaselect-border3 {
+    background: url('../img/imgareaselect.border-anim-v.gif') repeat-y right top;
+}
+
+.imgareaselect-border4 {
+    background: url('../img/imgareaselect.border-anim-h.gif') repeat-x left bottom;
+}
+
+.imgareaselect-border1, .imgareaselect-border2,
+.imgareaselect-border3, .imgareaselect-border4 {
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+
+.imgareaselect-handle {
+    background-color: #fff;
+    border: solid 1px #000;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+
+.imgareaselect-outer {
+    background-color: #000;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+
+.imgareaselect-selection {
+}
+
+
+.image-edit-area {
+	text-align:center;
+	border: 1px solid #dcdcdc;
+	background:#fff;
+	clear:both;
+}
+.image-edit-area td {
+	text-align:center;
+	vertical-align:middle;
+}
+div.tooltip {
+	position: absolute;
+	visibility: hidden;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+
+// 切り抜き枠の指定をアニメーションするために拡張
+$.extend($.imgAreaSelect, {
+	animate: function (fx) {
+		var start = fx.elem.start, end = fx.elem.end, now = fx.now,
+			curX1 = Math.round(start.x1 + (end.x1 - start.x1) * now),
+			curY1 = Math.round(start.y1 + (end.y1 - start.y1) * now),
+			curX2 = Math.round(start.x2 + (end.x2 - start.x2) * now),
+			curY2 = Math.round(start.y2 + (end.y2 - start.y2) * now);
+		fx.elem.ias.setSelection(curX1, curY1, curX2, curY2);
+		fx.elem.ias.update();
+	},
+	prototype: $.extend($.imgAreaSelect.prototype, {
+		animateSelection: function (x1, y1, x2, y2, duration) {
+			var fx = $.extend($('<div/>')[0], {
+				ias: this,
+				start: this.getSelection(),
+				end: { x1: x1, y1: y1, x2: x2, y2: y2 }
+			});
+
+			if (!$.imgAreaSelect.fxStepDefault) {
+				$.imgAreaSelect.fxStepDefault = $.fx.step._default;
+				$.fx.step._default = function (fx) {
+					return fx.elem.ias ? $.imgAreaSelect.animate(fx) :
+						$.imgAreaSelect.fxStepDefault(fx);
+				};
+			}
+
+			$(fx).animate({ cur: 1 }, duration, 'swing');
+		}
+	})
+});
+
+$(function() {
+
+	var width = '400';
+	var height = '400';
+
+	var dispWidth = '400';
+	var dispHeight = '400';
+	// 正方形の場合
+	if (width == height) {
+		$(".image-edit-area").css('width', dispWidth + "px");
+		$(".image-edit-area").css('height', dispHeight + "px");
+	}
+	// 長方形の場合
+	else {
+		// 縦長の場合は、縦を固定としてアスペクト比を保ちながら横を小さくする。
+		if (width < height) {
+			var colWidth = width * dispHeight / height;
+			dispWidth = Math.floor(colWidth);
+		}
+		// 横長の場合は、横を固定としてアスペクト比を保ちながら縦を小さくする。
+		else {
+			var colHeight = height * dispWidth / width;
+			dispHeight = Math.floor(colHeight);
+		}
+
+		$(".image-edit-area").css('width', dispWidth + "px");
+		$(".image-edit-area").css('height', dispHeight + "px");
+	}
+
+	// カラーピッカーを表示する。
+	var myPicker = new jscolor.color($("input[name='imageColor']").get(0), { pickerOnfocus : true, pickerPosition : "bottom", pickerFace : 10, styleElement : "photo-edit-area"})
+	//myPicker.showPicker();
+
+	// 切り抜き枠を生成する。
+	var ias;
+
+	// ヒストリー
+	var history;
+
+	// 初期化
+	$(init());
+	function init() {
+
+	  // 画像を置き換える。
+	  drawImage("../img/photo/photo1.jpg");
+
+	  // ヒストリー
+	  history = new Array({angle : 0, color : "FFFFFF", x1: 0, y1: 0, width: 0, height: 0});
+
+	  // カラーパレットのテキストエリアを戻す。
+	  myPicker.fromString("FFFFFF");
+
+	  $(".wraptocenter").css('width', $("input[name='imageWidth']").val());
+	  $(".wraptocenter").css('height', $("input[name='imageHeight']").val());
+	}
+
+	// 初期に戻る
+	$("input[name='backStart']").click(function(){
+		// 初期化
+		init();
+
+		// 現在の状態を取得
+		var data = getImageData();
+		// 現在の状態を設定
+		setImageData(data);
+	});
+
+	// 1つ前に戻る
+	$("input[name='backOnce']").click(function(){
+		if (history.length <= 1) {
+			return;
+		}
+		// ヒストリーから末尾を削除する。
+		history.pop();
+
+		// 現在の状態を取得
+		var data = getImageData();
+		// 現在の状態を設定
+		setImageData(data);
+
+	});
+
+	// 画像サイズ
+	$("input.imageSize").change(function(){
+		$(".wraptocenter").css('width', $("input[name='imageWidth']").val());
+		$(".wraptocenter").css('height', $("input[name='imageHeight']").val());
+	});
+
+	// 左に回転
+	$("input[name='rotateLeft']").click(function(){
+		// 現在の状態を取得
+		var data = getImageData();
+
+		// ９０度左に回転
+		var angle = data.angle - 90;
+		if (angle < 0) {
+			angle = 360 + angle;
+		}
+
+		var newData = {
+			angle : angle,
+			color : data.color,
+			x1: 0,
+			y1: 0,
+			width: 0,
+			height: 0
+		};
+
+		// ヒストリーに追加
+		addHistory(newData);
+
+		// 現在の状態を設定
+		setImageData(newData);
+	});
+
+	// 右に回転
+	$("input[name='rotateRight']").click(function(){
+		// 現在の状態を取得
+		var data = getImageData();
+
+		// ９０度右に回転
+		var angle = data.angle + 90;
+		if (angle >= 360) {
+			angle = 0;
+		}
+
+		var newData = {
+			angle : angle,
+			color : data.color,
+			x1: 0,
+			y1: 0,
+			width: 0,
+			height: 0
+		};
+
+		// ヒストリーに追加
+		addHistory(newData);
+
+		// 現在の状態を設定
+		setImageData(newData);
+	});
+
+	// 背景色
+	//$("input[name='imageColor']").change(function(){
+	$("input[name='imageColor']").blur(function(){
+		// 現在の状態を取得
+		var data = getImageData();
+
+		var newData = {
+			angle : data.angle,
+			color : $(this).val(),
+			x1: 0,
+			y1: 0,
+			width: 0,
+			height: 0
+		};
+
+		// ヒストリーに追加
+		addHistory(newData);
+
+		// 現在の状態を設定
+		setImageData(newData);
+	});
+
+	// 切り抜き枠を入れる
+	$("input[name='selectArea']").click(function(){
+
+		ias = initImageSelectArea();
+
+		// 切り抜き用のエリアを表示
+		ias.setOptions({ show: true});
+	});
+
+	// 画像切り抜きエリアを初期化します。
+	function initImageSelectArea() {
+		if (ias) {
+			ias.remove();
+			ias.setSelection(0, 0, 0, 0, true);
+		}
+		var ias = $('#editImage').imgAreaSelect({
+		instance: true,
+		handles: true,
+		fadeSpeed: 400,
+		onSelectEnd: setImageArea,
+		onSelectChange: setImageSize
+		});
+
+		$(".imgareaselect-selection").parent().find('#tooltip').remove().end().prepend("<div id=\"tooltip\"></div>");
+		return ias;
+	}
+
+	// 切り抜き枠を入れた場合に選択情報を保持しておく。
+	function setImageArea(img, selection) {
+	  // 現在の状態を取得
+	  var data = getImageData();
+
+	  var newData = {
+		  angle : data.angle,
+		  color : data.color,
+		  x1: selection.x1,
+		  y1: selection.y1,
+		  width: selection.width,
+		  height: selection.height
+	  };
+
+	  // ヒストリーに追加
+	  addHistory(newData);
+
+	}
+
+	// 画像の切り抜き枠を設定します
+	function setImageSize(img, selection) {
+		show_tooltip(selection.width, selection.height);
+	}
+
+	// 画像の切り抜き枠を表示します
+	function show_tooltip(selWidth, selHeight){
+		var msg = selWidth + "x" + selHeight;
+		$("#tooltip").text(msg);
+	}
+
+	// ヒストリーに追加
+	function addHistory(data) {
+		history.push(data);
+	}
+
+	// ヒストリーから最新を取得する。
+	function getImageData() {
+		return history.slice(-1)[0];
+	}
+
+	// 画像が読み込まれるのを待ってから処理を続行する。
+	function drawImage(img) {
+		var imgs = [img];
+		var objArray = [];
+		for(var i = 0; i < imgs.length; i++){
+		  var imgObj = new Image();
+		  imgObj.src = imgs[i];
+		  objArray.push(imgObj);
+		}
+		var viewStatus = function(){
+		  var count = 0;
+		  var str = "";
+		  for(var i = 0; i < objArray.length; i++){
+			if(objArray[i].complete) count++;
+			var html = '<img id=\"editImage\" src=\"' + objArray[i].src + '\">'
+			$("#editImage").replaceWith(html);
+		  }
+		  if(count < objArray.length){
+			setTimeout(viewStatus, 100);
+		  }
+		};
+		viewStatus();
+	}
+
+	// 引数で渡したデータをフォーム上に表示する。
+	function setImageData(data) {
+		// 画像を回転
+		$("#editImage").rotate(data.angle, true);
+		// 背景色を表示
+		$(".image-edit-area").css('background-color', '#' + data.color);
+		// カラーパレットのテキストエリアを戻す。
+		myPicker.fromString(data.color);
+
+		// 切り抜き用のエリアを設定
+		if ( 0 < data.width && 0 < data.height ) {
+
+			if (ias.getSelection().width == 0 && ias.getSelection().height == 0) {
+				ias = initImageSelectArea();
+				ias.setOptions({show: true, x1: data.x1, y1: data.y1, x2:  data.x1 + data.width, y2:  data.y1 + data.height });
+			}
+			ias.animateSelection(data.x1, data.y1, data.x1 + data.width, data.y1 + data.height, 'slow');
+			show_tooltip(data.width, data.height);
+
+		}
+		else {
+			if (ias) {
+				ias.remove();
+				ias.setSelection(0, 0, 0, 0, true);
+			}
+		}
+	}
+
+});
+</script>
+</head>
+<body>
+<p>IE8～6対応</p>
+<div id="main">
+	<div id="memu" style="text-align:left">
+		<input type="button" name="backStart" value="初期に戻る">
+		<input type="button" name="backOnce" value="1つ前に戻る">
+		<br/>
+		<input type="button" name="rotateLeft" value="90度左へ回転" >
+		<input type="button" name="rotateRight" value="90度右へ回転">
+		<br/>
+		背景色: <input type="text" name="imageColor" value="FFFFFF">
+		<br/>
+		<input type="button" name="selectArea" value="切り抜き枠を入れる">
+	</div>
+	<hr/>
+	<div id="contents">
+		<table id="photo-edit-area" class="image-edit-area">
+		<tr>
+		<td>
+		<img id="editImage" src="" alt="サンプル画像" />
+		</td>
+		</tr>
+		</table>
+	</div>
+</div>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+.descriptions {
+	margin: 0 -22px;
+	width: 1004px;
+	padding-top: 2px;
+}
+
+.header {
+	float: left;
+	display: inline;
+	margin: 25px 22px 0;
+	width: 398px;
+	padding: 1px 0 1px 60px;
+}
+
+.photosArea li {
+	margin: 25px 22px 0;
+}
+
+.photos {
+	list-style: none;
+}
+
+.photos li {
+	float: left;
+	display: inline;
+	width: 458px;
+}
+
+.photos .odd {
+	float: right;
+}
+</style>
+
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+$(function(){
+
+	// 拡大写真パネル
+	$('.js-zoomPhotoPanel').zoomPhotoPanel({
+		'animateType': $.fn.zoomPhotoPanel.ANIMATE_TYPE.SLIDE,
+		'imageUrl': '/sample/jquery/img',
+		'carousel': true,
+		'slideCallBack': function(data) {
+		}
+	});
+
+});
+//-->
+</script>
+
+</head>
+<body>
+<div class="descriptions">
+<div class="header">
+	<p class="description">拡大写真パネル</p>
+</div>
+<div class="content js-zoomPhotoPanel">
+	<ul class="photos photosArea">
+		<li class="odd">
+			<div class="photo photo_l"><a href="#" class="gallery">
+			<img src="../img/photo/photo1.jpg" osrc="../img/photo/photo1.jpg" width="300" class="image js-zoomPhoto"/>
+			<img src="../img/ico_photo_zoom-in.png" alt="拡大" width="58" height="58" class="zoom-in" />
+			</a></div>
+		</li>
+		<li class="even">
+			<div class="photo photo_l"><a href="#" class="gallery">
+			<img src="../img/photo/photo2.jpg" osrc="../img/photo/photo2.jpg" width="300" class="image js-zoomPhoto"/>
+			<img src="../img/ico_photo_zoom-in.png" alt="拡大" width="58" height="58" class="zoom-in" />
+			</a></div>
+		</li>
+		<li class="odd">
+			<div class="photo photo_l"><a href="#" class="gallery">
+			<img src="../img/photo/photo3.jpg" osrc="../img/photo/photo3.jpg" width="300" class="image js-zoomPhoto"/>
+			<img src="../img/ico_photo_zoom-in.png" alt="拡大" width="58" height="58" class="zoom-in" />
+			</a></div>
+		</li>
+	</ul>
+</div>
+</div>
+</body>
+</html>

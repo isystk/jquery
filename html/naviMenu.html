@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+/* メニュー
+--------------------------------------*/
+
+#globalMenu{
+	width: 100%;
+	background: #ffffff url(../img/bg_header.gif) left bottom repeat-x;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+#globalMenu ul a:link, #globalMenu ul a:visited, #globalMenu ul a:hover, #globalMenu ul a:active{
+	text-decoration: none;
+	color: #666666;
+	display: block;
+	padding: 6px 20px;
+}
+
+#globalMenu ul{
+	border-left: 1px solid #e5e5e5;
+	margin:0 20px;
+}
+
+#globalMenu ul li {
+	float: left;
+	display: inline;
+	border-right: 1px solid #e5e5e5;
+	white-space: nowrap;
+}
+
+#globalMenu ul li a{
+	color: #666666;
+}
+
+#globalMenu ul li a:hover{
+	background:#ffffff;
+	color: #e63082;
+}
+
+#globalMenu ul li.focus a{
+	background: #e5e5e5;
+	color: #333333;
+}
+
+/* サブメニュー */
+
+#subMenu{
+	background: #e5e5e5;
+	border-bottom: 1px solid #dddddd;
+	padding: 6px 0 6px 20px;
+}
+
+#subMenu li{
+	float: left;
+	line-height: 180%;
+	display:inline;
+	white-space: nowrap;
+	margin: 0 20px 0 0;
+}
+
+#subMenu li a{
+	background: url(../img/ico_arrow_left.gif) left 50% no-repeat;
+	color: #333333;
+	padding: 0 0 0 11px;
+}
+
+</style>
+
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+$(function() {
+	$.globalMenuNavi([
+		{global: "#global_home", action: "link"},
+		{global: "#global_menu1", action: "click"},
+		{global: "#global_menu2", action: "click"},
+		{global: "#global_menu3", action: "click"}
+	]).load();
+});
+</script>
+</head>
+<body>
+<!-- メニュー -->
+<div id="globalMenu">
+<ul class="clearfix">
+<li><a href="#" id="global_home">HOME</a></li>
+<li><a href="#" id="global_menu1">メニュー１</a></li>
+<li><a href="#" id="global_menu2">メニュー２</a></li>
+<li><a href="#" id="global_menu3">メニュー３</a></li>
+</ul>
+
+<!-- サブメニュー１ -->
+<div id="global_menu1-sub" class="display-none">
+<ul id="subMenu" class="clearfix">
+<li><a href="#">サブメニュー１－１</a></li>
+<li><a href="#">サブメニュー１－２</a></li>
+</ul>
+</div>
+
+<!-- サブメニュー２ -->
+<div id="global_menu2-sub" class="display-none">
+<ul id="subMenu" class="clearfix">
+<li><a href="#">サブメニュー２－１</a></li>
+<li><a href="#">サブメニュー２－２</a></li>
+</ul>
+</div>
+
+<!-- サブメニュー３ -->
+<div id="global_menu3-sub" class="display-none">
+<ul id="subMenu" class="clearfix">
+<li><a href="#">サブメニュー３－１</a></li>
+<li><a href="#">サブメニュー３－２</a></li>
+</ul>
+</div>
+
+</div>
+</body>
+</html>

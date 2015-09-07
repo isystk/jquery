@@ -1,0 +1,707 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+table.calendar{
+border:solid 1px #ddd;
+background:#fff;
+width:100%;
+color:#666;
+}
+table.calendar th,
+table.calendar td{
+border:solid 1px #ddd;
+width:14% !important;
+padding:1px 0 !important;
+text-align:center;
+}
+table.calendar thead th{
+background:#e2f9b8 !important;
+width:auto !important;
+color:#888;
+}
+table.calendar tbody th,
+table.calendar tbody td{
+vertical-align:middle;
+font-size:91.7%;
+}
+table.calendar tbody th{
+background:#f6fbe8 !important;
+font-weight:normal;
+color:#888;
+}
+table.calendar td{
+background:#fff !important;
+}
+table.calendar .sat{
+color:#39c;
+}
+table.calendar .sun,
+table.calendar .holiday{
+color:#ff3b72;
+}
+table.calendar .past{
+color:#ccc !important;
+}
+table.calendar .available,
+table.calendar .unavailable{
+background:#ffe1ef !important;
+}
+table.calendar .available span,
+table.calendar .unavailable span{
+display:block;
+font-size:136.4%;
+line-height:1;
+color:#e63082;
+}
+
+
+/* 選択用 */
+table.input tbody th:hover,
+table.input tbody td:hover{
+background-color:#ffe1ef !important;
+cursor:pointer;
+}
+table.input tbody .selected{
+background:#ffe1ef url(../img/bg_calendar.png) no-repeat 50% 50% !important;
+color:#fff;
+}
+table.input tbody .empty,
+table.input tbody .past,
+table.input tbody .empty:hover,
+table.input tbody .past:hover{
+background:#fff !important;
+cursor:default;
+}
+
+.multiCalender {
+    width: 200px;
+    float: left;
+    margin-right: 10px;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+<script type="text/javascript">
+$(function() {
+
+	// カレンダーの関連チェック
+	function CheckCalender (options) {
+		var parent = this.parent = options.parent, // 親のセレクタ
+			children = this.children =  options.children, // 子のセレクタ
+			isCheckBox = this.isCheckBox = options.isCheckBox; // 親がチェックボックスかどうか
+	};
+	// 親が選択された場合は、子をすべて選択する。
+    CheckCalender.prototype.checkChildren = function () {
+		if (this.isCheckBox) {
+			if (this.parent.attr('checked') === 'checked') {
+				this.children.addClass('selected');
+			}
+			else {
+				this.children.removeClass('selected');
+			}
+		}
+		else {
+			if (this.parent.hasClass('selected')) {
+				this.children.addClass('selected');
+			}
+			else {
+				this.children.removeClass('selected');
+			}
+		}
+
+		// 同じ曜日で、すべての週が選択されていた場合は、曜日を選択する。
+		this.checkWeekSelect();
+	};
+	// 子がすべて選択された場合は、親を選択する。
+    CheckCalender.prototype.checkParent = function () {
+		var isAllSelect = _.all(this.children, function (date) {
+			return $(date).hasClass('selected');
+		});
+		if (this.isCheckBox) {
+			if (isAllSelect) {
+				this.parent.attr('checked', 'checked');
+			}
+			else {
+				this.parent.removeAttr('checked');
+			}
+		}
+		else {
+			if (isAllSelect) {
+				this.parent.addClass('selected');
+			}
+			else {
+				this.parent.removeClass('selected');
+			}
+		}
+	};
+	// 同じ曜日で、すべての週が選択されていた場合は、曜日を選択する。
+    CheckCalender.prototype.checkWeekSelect = function() {
+		$('.weekregion').each(function() {
+			var week= $(this),
+				dates = week.parents('.calendar:first').find('td[data-week='+week.data('week')+']').filter(function() {
+					return !$(this).hasClass('past') && !$(this).hasClass('empty');
+				});
+			var isAllSelect = false;
+			if (dates.length != 0) {
+				isAllSelect = _.all(dates, function (date) {
+					return $(date).hasClass('selected');
+				});
+			}
+			if (isAllSelect) {
+				week.addClass('selected');
+			}
+			else {
+				week.removeClass('selected');
+			}
+		});
+	};
+
+	// 検索条件パネル
+	var allday = $('.dateregion').filter(function() {return !$(this).hasClass('past') && !$(this).hasClass('empty');}), // カレンダーのすべての日付
+		weekday = allday.filter(function() {return $(this).hasClass('weekday');}), // カレンダーの平日
+		holiday = allday.filter(function() {return $(this).hasClass('holiday') || $(this).hasClass('sat') || $(this).hasClass('sun');}), // カレンダーの休日
+		alldayChk = new CheckCalender({parent : $('#selectAllDay'), children : allday, isCheckBox: true}),
+		weekdayChk = new CheckCalender({parent : $('#selectAllWeekday'), children : weekday, isCheckBox: true}),
+		holidayChk = new CheckCalender({parent : $('#selectAllHoliday'), children : holiday, isCheckBox: true});
+	
+	// 土日・祝日は、初期表示時に選択状態とする。
+	holiday.addClass('selected');
+
+	// 平日の関連チェック
+	weekdayChk.checkParent();
+	// 休日の関連チェック
+	holidayChk.checkParent();
+	// すべての日付の関連チェック
+	alldayChk.checkParent();
+	// すべての週が選択されている場合は、曜日を選択する。
+	$('.dateregion.selected').each(function () {
+		var td = $(this),
+			week = td.parents('.calendar:first').find('th[data-week='+td.data('week')+']'),
+			dates = td.parents('.calendar:first').find('td[data-week='+td.data('week')+']').filter(function() {
+				return !$(this).hasClass('past') && !$(this).hasClass('empty');
+			});
+		var weekChk = new CheckCalender({parent : week, children : dates, isCheckBox: false});
+		// 曜日の関連チェック
+		weekChk.checkParent();
+	});
+	
+	// 平日をすべて選択
+	$('#selectAllWeekday').change(function() {
+		// 休日の関連チェック
+		weekdayChk.checkChildren();
+		// すべての日付の関連チェック
+		alldayChk.checkParent();
+	});
+	
+	// 休日をすべて選択
+	$('#selectAllHoliday').change(function() {
+		// 休日の関連チェック
+		holidayChk.checkChildren();
+		// すべての日付の関連チェック
+		alldayChk.checkParent();
+	});
+	
+	// すべての日付を選択
+	$('#selectAllDay').change(function() {
+		// すべての日付の関連チェック
+		alldayChk.checkChildren();
+		// 平日の関連チェック
+		weekdayChk.checkParent();
+		// 休日の関連チェック
+		holidayChk.checkParent();
+	});
+
+	// 曜日選択時
+	$('.weekregion').click(function(){
+		var parent= $(this),
+			children = parent.parents('.calendar:first').find('td[data-week='+parent.data('week')+']').filter(function() {return !$(this).hasClass('past') && !$(this).hasClass('empty');}),
+			isAllPast = _.all(children, function (child) {
+				return $(child).hasClass('past') || $(this).hasClass('empty');
+			});
+		// すべての週が現在日よりも昔の場合は、曜日を選択させない。
+		if (isAllPast) {
+			return;
+		}
+		parent.toggleClass('selected');
+		// 曜日の関連チェック
+		var weekChk = new CheckCalender({parent : parent, children : children, isCheckBox: false});
+		weekChk.checkChildren();
+		// 平日の関連チェック
+		weekdayChk.checkParent();
+		// 休日の関連チェック
+		holidayChk.checkParent();
+		// すべての日付の関連チェック
+		alldayChk.checkParent();
+	});
+	
+	// 日付選択時
+	$('.dateregion').click(function(){
+		if($(this).hasClass('past') || $(this).hasClass('empty')) {
+			return;
+		}
+		$(this).toggleClass('selected');
+		var td = $(this),
+			week = td.parents('.calendar:first').find('th[data-week='+td.data('week')+']'),
+			dates = td.parents('.calendar:first').find('td[data-week='+td.data('week')+']').filter(function() {
+				return !$(this).hasClass('past') && !$(this).hasClass('empty');
+			});
+		// 曜日の関連チェック
+		var weekChk = new CheckCalender({parent : week, children : dates, isCheckBox: false});
+		weekChk.checkParent();
+		// 平日の関連チェック
+		weekdayChk.checkParent();
+		// 休日の関連チェック
+		holidayChk.checkParent();
+		// すべての日付の関連チェック
+		alldayChk.checkParent();
+	});
+	
+});
+</script>
+</head>
+<body>
+	<p>
+		<label><input id="selectAllWeekday" type="checkbox" class="checkbox"/>平日を選択</label>
+		<label><input id="selectAllHoliday" type="checkbox" class="checkbox"/>休日を選択</label>
+		<label><input id="selectAllDay" type="checkbox" class="checkbox"/>すべての日付を選択</label>
+	</p>
+	
+    <div class="multiCalender">
+	<table border="1" class="calendar input multiboxdatepicker" id="calendar0">
+	<thead>
+		<tr>
+			<th colspan="7" class="monthregion">2012年&nbsp;07月</th>
+		</tr>
+	</thead>
+		<tr>
+			<th data-week="2" class="mon weekregion weekday">月</th>
+			<th data-week="3" class="tue weekregion weekday">火</th>
+			<th data-week="4" class="wed weekregion weekday">水</th>
+			<th data-week="5" class="thu weekregion weekday">木</th>
+			<th data-week="6" class="fri weekregion weekday">金</th>
+			<th data-week="7" class="sat weekregion">土</th>
+			<th data-week="1" class="sun weekregion">日</th>
+		</tr>
+			<tr>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="1" data-date="2012/07/01" class="past sun holiday  dateregion" >
+					1
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/07/02" class="past mon  weekday  dateregion" >
+					2
+			</td>
+			<td data-week="3" data-date="2012/07/03" class="past tue  weekday  dateregion" >
+					3
+			</td>
+			<td data-week="4" data-date="2012/07/04" class="past wed  weekday  dateregion" >
+					4
+			</td>
+			<td data-week="5" data-date="2012/07/05" class="past thu  weekday  dateregion" >
+					5
+			</td>
+			<td data-week="6" data-date="2012/07/06" class="past fri  weekday  dateregion" >
+					6
+			</td>
+			<td data-week="7" data-date="2012/07/07" class="past sat  dateregion" >
+					7
+			</td>
+			<td data-week="1" data-date="2012/07/08" class="past sun holiday  dateregion" >
+					8
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/07/09" class="past mon  weekday  dateregion" >
+					9
+			</td>
+			<td data-week="3" data-date="2012/07/10" class="past tue  weekday  dateregion" >
+					10
+			</td>
+			<td data-week="4" data-date="2012/07/11" class="past wed  weekday  dateregion" >
+					11
+			</td>
+			<td data-week="5" data-date="2012/07/12" class="past thu  weekday  dateregion" >
+					12
+			</td>
+			<td data-week="6" data-date="2012/07/13" class="past fri  weekday  dateregion" >
+					13
+			</td>
+			<td data-week="7" data-date="2012/07/14" class="past sat  dateregion" >
+					14
+			</td>
+			<td data-week="1" data-date="2012/07/15" class="past sun holiday  dateregion" >
+					15
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/07/16" class="past mon holiday  dateregion" >
+					16
+			</td>
+			<td data-week="3" data-date="2012/07/17" class="past tue  weekday  dateregion" >
+					17
+			</td>
+			<td data-week="4" data-date="2012/07/18" class="wed  weekday  dateregion" >
+					18
+			</td>
+			<td data-week="5" data-date="2012/07/19" class="thu  weekday  dateregion" >
+					19
+			</td>
+			<td data-week="6" data-date="2012/07/20" class="fri  weekday  dateregion" >
+					20
+			</td>
+			<td data-week="7" data-date="2012/07/21" class="sat  dateregion" >
+					21
+			</td>
+			<td data-week="1" data-date="2012/07/22" class="sun holiday  dateregion" >
+					22
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/07/23" class="mon  weekday  dateregion" >
+					23
+			</td>
+			<td data-week="3" data-date="2012/07/24" class="tue  weekday  dateregion" >
+					24
+			</td>
+			<td data-week="4" data-date="2012/07/25" class="wed  weekday  dateregion" >
+					25
+			</td>
+			<td data-week="5" data-date="2012/07/26" class="thu  weekday  dateregion" >
+					26
+			</td>
+			<td data-week="6" data-date="2012/07/27" class="fri  weekday  dateregion" >
+					27
+			</td>
+			<td data-week="7" data-date="2012/07/28" class="sat  dateregion" >
+					28
+			</td>
+			<td data-week="1" data-date="2012/07/29" class="sun holiday  dateregion" >
+					29
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/07/30" class="mon  weekday  dateregion" >
+					30
+			</td>
+			<td data-week="3" data-date="2012/07/31" class="tue  weekday  dateregion" >
+					31
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			</tr>
+	</table>
+    </div>
+    <div class="multiCalender">
+	<table border="1" class="calendar input multiboxdatepicker" id="calendar1">
+	<thead>
+		<tr>
+			<th colspan="7" class="monthregion">2012年&nbsp;08月</th>
+		</tr>
+	</thead>
+		<tr>
+			<th data-week="2" class="mon weekregion weekday">月</th>
+			<th data-week="3" class="tue weekregion weekday">火</th>
+			<th data-week="4" class="wed weekregion weekday">水</th>
+			<th data-week="5" class="thu weekregion weekday">木</th>
+			<th data-week="6" class="fri weekregion weekday">金</th>
+			<th data-week="7" class="sat weekregion">土</th>
+			<th data-week="1" class="sun weekregion">日</th>
+		</tr>
+			<tr>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="4" data-date="2012/08/01" class="wed  weekday  dateregion" >
+					1
+			</td>
+			<td data-week="5" data-date="2012/08/02" class="thu  weekday  dateregion" >
+					2
+			</td>
+			<td data-week="6" data-date="2012/08/03" class="fri  weekday  dateregion" >
+					3
+			</td>
+			<td data-week="7" data-date="2012/08/04" class="sat  dateregion" >
+					4
+			</td>
+			<td data-week="1" data-date="2012/08/05" class="sun holiday  dateregion" >
+					5
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/08/06" class="mon  weekday  dateregion" >
+					6
+			</td>
+			<td data-week="3" data-date="2012/08/07" class="tue  weekday  dateregion" >
+					7
+			</td>
+			<td data-week="4" data-date="2012/08/08" class="wed  weekday  dateregion" >
+					8
+			</td>
+			<td data-week="5" data-date="2012/08/09" class="thu  weekday  dateregion" >
+					9
+			</td>
+			<td data-week="6" data-date="2012/08/10" class="fri  weekday  dateregion" >
+					10
+			</td>
+			<td data-week="7" data-date="2012/08/11" class="sat  dateregion" >
+					11
+			</td>
+			<td data-week="1" data-date="2012/08/12" class="sun holiday  dateregion" >
+					12
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/08/13" class="mon  weekday  dateregion" >
+					13
+			</td>
+			<td data-week="3" data-date="2012/08/14" class="tue  weekday  dateregion" >
+					14
+			</td>
+			<td data-week="4" data-date="2012/08/15" class="wed  weekday  dateregion" >
+					15
+			</td>
+			<td data-week="5" data-date="2012/08/16" class="thu  weekday  dateregion" >
+					16
+			</td>
+			<td data-week="6" data-date="2012/08/17" class="fri  weekday  dateregion" >
+					17
+			</td>
+			<td data-week="7" data-date="2012/08/18" class="sat  dateregion" >
+					18
+			</td>
+			<td data-week="1" data-date="2012/08/19" class="sun holiday  dateregion" >
+					19
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/08/20" class="mon  weekday  dateregion" >
+					20
+			</td>
+			<td data-week="3" data-date="2012/08/21" class="tue  weekday  dateregion" >
+					21
+			</td>
+			<td data-week="4" data-date="2012/08/22" class="wed  weekday  dateregion" >
+					22
+			</td>
+			<td data-week="5" data-date="2012/08/23" class="thu  weekday  dateregion" >
+					23
+			</td>
+			<td data-week="6" data-date="2012/08/24" class="fri  weekday  dateregion" >
+					24
+			</td>
+			<td data-week="7" data-date="2012/08/25" class="sat  dateregion" >
+					25
+			</td>
+			<td data-week="1" data-date="2012/08/26" class="sun holiday  dateregion" >
+					26
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/08/27" class="mon  weekday  dateregion" >
+					27
+			</td>
+			<td data-week="3" data-date="2012/08/28" class="tue  weekday  dateregion" >
+					28
+			</td>
+			<td data-week="4" data-date="2012/08/29" class="wed  weekday  dateregion" >
+					29
+			</td>
+			<td data-week="5" data-date="2012/08/30" class="thu  weekday  dateregion" >
+					30
+			</td>
+			<td data-week="6" data-date="2012/08/31" class="fri  weekday  dateregion" >
+					31
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			</tr>
+	</table>
+    </div>
+    <div class="multiCalender">
+	<table border="1" class="calendar input multiboxdatepicker" id="calendar2">
+	<thead>
+		<tr>
+			<th colspan="7" class="monthregion">2012年&nbsp;09月</th>
+		</tr>
+	</thead>
+		<tr>
+			<th data-week="2" class="mon weekregion weekday">月</th>
+			<th data-week="3" class="tue weekregion weekday">火</th>
+			<th data-week="4" class="wed weekregion weekday">水</th>
+			<th data-week="5" class="thu weekregion weekday">木</th>
+			<th data-week="6" class="fri weekregion weekday">金</th>
+			<th data-week="7" class="sat weekregion">土</th>
+			<th data-week="1" class="sun weekregion">日</th>
+		</tr>
+			<tr>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="0" data-date="" class="empty  dateregion" >
+					&nbsp;
+			</td>
+			<td data-week="7" data-date="2012/09/01" class="sat  dateregion" >
+					1
+			</td>
+			<td data-week="1" data-date="2012/09/02" class="sun holiday  dateregion" >
+					2
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/09/03" class="mon  weekday  dateregion" >
+					3
+			</td>
+			<td data-week="3" data-date="2012/09/04" class="tue  weekday  dateregion" >
+					4
+			</td>
+			<td data-week="4" data-date="2012/09/05" class="wed  weekday  dateregion" >
+					5
+			</td>
+			<td data-week="5" data-date="2012/09/06" class="thu  weekday  dateregion" >
+					6
+			</td>
+			<td data-week="6" data-date="2012/09/07" class="fri  weekday  dateregion" >
+					7
+			</td>
+			<td data-week="7" data-date="2012/09/08" class="sat  dateregion" >
+					8
+			</td>
+			<td data-week="1" data-date="2012/09/09" class="sun holiday  dateregion" >
+					9
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/09/10" class="mon  weekday  dateregion" >
+					10
+			</td>
+			<td data-week="3" data-date="2012/09/11" class="tue  weekday  dateregion" >
+					11
+			</td>
+			<td data-week="4" data-date="2012/09/12" class="wed  weekday  dateregion" >
+					12
+			</td>
+			<td data-week="5" data-date="2012/09/13" class="thu  weekday  dateregion" >
+					13
+			</td>
+			<td data-week="6" data-date="2012/09/14" class="fri  weekday  dateregion" >
+					14
+			</td>
+			<td data-week="7" data-date="2012/09/15" class="sat  dateregion" >
+					15
+			</td>
+			<td data-week="1" data-date="2012/09/16" class="sun holiday  dateregion" >
+					16
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/09/17" class="mon holiday  dateregion" >
+					17
+			</td>
+			<td data-week="3" data-date="2012/09/18" class="tue  weekday  dateregion" >
+					18
+			</td>
+			<td data-week="4" data-date="2012/09/19" class="wed  weekday  dateregion" >
+					19
+			</td>
+			<td data-week="5" data-date="2012/09/20" class="thu  weekday  dateregion" >
+					20
+			</td>
+			<td data-week="6" data-date="2012/09/21" class="fri  weekday  dateregion" >
+					21
+			</td>
+			<td data-week="7" data-date="2012/09/22" class="sat holiday  dateregion" >
+					22
+			</td>
+			<td data-week="1" data-date="2012/09/23" class="sun holiday  dateregion" >
+					23
+			</td>
+			</tr>
+			<tr>
+			<td data-week="2" data-date="2012/09/24" class="mon  weekday  dateregion" >
+					24
+			</td>
+			<td data-week="3" data-date="2012/09/25" class="tue  weekday  dateregion" >
+					25
+			</td>
+			<td data-week="4" data-date="2012/09/26" class="wed  weekday  dateregion" >
+					26
+			</td>
+			<td data-week="5" data-date="2012/09/27" class="thu  weekday  dateregion" >
+					27
+			</td>
+			<td data-week="6" data-date="2012/09/28" class="fri  weekday  dateregion" >
+					28
+			</td>
+			<td data-week="7" data-date="2012/09/29" class="sat  dateregion" >
+					29
+			</td>
+			<td data-week="1" data-date="2012/09/30" class="sun holiday  dateregion" >
+					30
+			</td>
+		</tr>
+	</table>
+    </div>
+</body>
+</html>

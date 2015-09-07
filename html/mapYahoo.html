@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+<script src="http://js.api.olp.yahooapis.jp/OpenLocalPlatform/V1/jsapi?appid=0_AqmTixg65w38aOdorWWr5Xc6242L2p7asGYjAvLMf2y_w4xpOCLfpEEn4QOw--" type="text/javascript"  charset="UTF-8" ></script>
+
+<script type="text/javascript">
+$(function() {
+    var map = new Y.Map("map");
+    //基本的なコントロールの追加
+    map.addControl(new Y.LayerSetControl());
+    //スライダーズームコントロールを追加
+    map.addControl(new Y.SliderZoomControl());
+    //検索コントロールを追加
+    var search = new Y.SearchControl();
+    map.addControl(search);
+    var position = new Y.LatLng(35.665627,139.730738);
+    map.drawMap(position, 18,Y.LayerSetId.NORMAL);
+    var marker = new Y.Marker(position);
+    map.addFeature(marker);
+    Y.Event.addListener(map, 'click dblclick', function (latlng){
+        map.removeFeature(marker);
+        marker = new Y.Marker(new Y.LatLng(latlng.lat(),latlng.lng()));
+        map.addFeature(marker);
+    });
+});
+</script>
+</head>
+<body>
+<div id="map" style="width:600px; height:480px;"></div>
+</body>
+</html>

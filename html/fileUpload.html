@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+#imageFileDiv {
+	border: 2px dashed #BBB;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	padding: 25px;
+	text-align: center;
+	font: 20pt bold,"Vollkorn";
+	color: #BBB;
+	width: 250px;
+	margin:0 auto 0 auto;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+$(function(){
+
+	// エラーメッセージを表示します。
+	var showErrorMsg = function(errors) {
+		//var divs = _.map(errors, function(error) {
+		//	return '<p class=\"errortxt\">'+error+'</p>';
+		//});
+		//$('#errorsArea').empty().append('<div class=\"alertBox\">' + divs.join('') + '</div>');
+		alert(errors.join(''));
+	};
+	// 画像ファイルのアップロード
+	var fileUpload = function (file) {
+		var url = encodeURI('/client/album/list/imageUpload/');
+		// 60秒以内にレスポンスがない場合は、タイムアウトメッセージを表示する。
+		var timer = setTimeout( function() {
+			var errors = [];
+			errors.push('タイムアウトが発生しました。');
+			showErrorMsg(errors);
+			// 「ファイル選択」ボタンを活性に戻す。
+			$('#imageFileSelectBtn').removeAttr('disabled');
+			return false;
+		}, 60000);
+		$(file).upload(url, {imageId: $("#imageId").val()}, function(res) {
+			clearInterval(timer);
+			// 「ファイル選択」ボタンを活性に戻す。
+			$('#imageFileSelectBtn').removeAttr('disabled');
+			// エラー処理
+			$('#errorsArea').empty();
+			$('input','select').removeClass('error');
+			if (res.errors) {
+				showErrorMsg(res.errors);
+				return false;
+			}
+			$("#imageId").val(res.imageId);
+			$("#imagePath").val(res.imagePath);
+
+			// 画像をアニメーション（フェードイン）で表示します。
+			var uploadImage = $('#uploadImage');
+			var src = res.imageFullpath + '?time=' + new Date().getTime();
+			$('<img src="'+src+'" />').load(function(){
+				uploadImage.animate({'opacity': 0 }, 300, function() {
+					uploadImage.attr('src', src).animate({'opacity': 1}, 300);
+				});
+			});
+
+			// 画像が設定されていない場合は、登録ボタンを押させない
+			$('.require').change();
+		}, 'json');
+
+		// アップロード中は、「ファイル選択」ボタンを非活性にする。
+		$('#imageFileSelectBtn').attr('disabled', 'disabled');
+	};
+
+	// 画像ファイル選択時
+	$('#imageFileSelectBtn').change(function(){
+		handleFileSelect(this);
+	});
+
+	var handleFileSelect = function (files) {
+		// ファイルAPIに対応している場合は、画像チェックとサイズチェックをクライアント側でも行う。
+		if (window.File && window.FileReader && window.FileList && window.Blob){
+			for(var i=0,len=files.length; i<len; i++){
+				var file = files[i];
+				var errors = [];
+				// 画像でない場合
+				if( !file.type.match("image.*") ){
+					errors.push('画像ファイルが不正です。');
+				}
+				// ファイルサイズが10M以上の場合
+				var maxFileSize = 10000000;
+				if( maxFileSize <= file.size ){
+					errors.push('画像ファイルのファイルサイズが最大値('+ maxFileSize +'バイト)を超えています。');
+				}
+				if (0 < errors.length) {
+					showErrorMsg(errors);
+					return false;
+				}
+				var reader = new FileReader();
+				reader.onload = (function(theFile) {
+					return function(e) {
+						$('#imageFileDiv')
+							.empty()
+							.append($('<img/>').attr('src', e.target.result).attr('alt', theFile.name));
+					};
+				})(file);
+				reader.readAsDataURL(file);
+			}
+		}
+		fileUpload(files);
+	};
+
+	// ドラッグドロップからの入力
+	$("#imageFileDiv").bind("drop", function (e) {
+		e.preventDefault();
+		// ドラッグされたファイル情報を取得
+		var files = e.originalEvent.dataTransfer.files;
+		// 選択した画像を表示する
+		handleFileSelect(files);
+	})
+	.bind("dragenter", function () {
+		// false を返してデフォルトの処理を実行しないようにする
+		return false;
+	})
+	.bind("dragover", function () {
+		// false を返してデフォルトの処理を実行しないようにする
+		return false;
+	});
+
+});
+// -->
+</script>
+</head>
+<body>
+<form id="form" enctype="multipart/form-data">
+<div id="uploadDiv">
+	<div>
+		<input type="hidden" name="fileName" value="" />
+		<input type="hidden" name="filePath" value="" />
+		<input type="hidden" name="fileSize" value="" />
+		<div id="imageFileDiv">ここにファイルをドロップ</div>
+	</div>
+	<p><input type="file" name="imageFile" value="ファイルを選択" id="imageFileSelectBtn"/></p>
+</div>
+</form>
+</body>
+</html>
+
+

@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+/*--------------------------------------------------------------------
+
+	8	スライドショー（写真共有アプリ連携）
+
+--------------------------------------------------------------------*/
+#slideshow{}
+
+
+/* 説明 */
+#slideshow #description{
+margin-bottom:25px;
+}
+#slideshow #description .content{
+position:relative;
+padding-right:216px;
+width:720px;
+}
+#slideshow #description .content .button{
+position:absolute;
+top:50%;
+right:16px;
+margin:-15px 0 0;
+}
+
+
+/* アルバム詳細 */
+#slideshow #album{
+margin:25px 0;
+}
+#slideshow #album .text p{
+margin:0;
+}
+#slideshow #album .datePublished{
+color:#999;
+}
+#slideshow #album .expiration{
+color:#f36;
+}
+#slideshow #album .photos{
+margin-top:0;
+margin-right:-12px;
+}
+#slideshow #album .photos .photo{
+margin:15px 13px 0 0;
+}
+#slideshow #album .photos .checked{
+background-color:#e3f79e;
+}
+
+
+/* スライドショーの設定 */
+#slideshow #settings{
+margin:25px 0;
+}
+#slideshow #settings .heading{
+margin-bottom:-7px;
+}
+
+
+/* フルスクリーン表示 */
+#slideshow .full-screen .heading{
+position:absolute;
+left:2%;
+top:20px;
+margin:0;
+width:96%;
+padding:11px 0 0 40px;
+text-align:left;
+font-size:166.7%;
+line-height:1.3;
+}
+#slideshow .full-screen .photos{
+position:absolute;
+left:0;
+top:77px;
+bottom:115px;
+margin:0;
+width:100%;
+text-align:center;
+}
+#slideshow .full-screen .photos li{
+position:absolute;
+left:0;
+width:100%;
+height:100%;
+}
+#slideshow .full-screen .photos li img{
+width:auto;
+height:100%;
+}
+#slideshow .full-screen .text{
+position:absolute;
+left:2%;
+bottom:0;
+width:96%;
+height:100px;
+text-align:center;
+}
+#slideshow .full-screen .text *{
+margin:0;
+}
+#slideshow .full-screen .button{
+top:2%;
+right:2%;
+}
+#slideshow .full-screen .sub{
+right:2%;
+bottom:2%;
+}
+
+.section_frame4{
+margin:15px 0;
+box-shadow:0 1px 1px #ebebeb;-moz-box-shadow:0 1px 1px #dadada;-webkit-box-shadow:0 1px 1px #ebebeb;
+background:#f9f9f4 url(../img/bg_search.png) repeat 0 0;
+padding:3px;
+}
+.section_frame4 .content{
+border:solid 1px #fff;
+padding:1px 16px;
+}
+.section_frame4 .inner .content{
+background:url(../img/bg_search_inner.png) no-repeat 50% 100%;
+}
+.section_frame4 .button{
+margin:15px 0;
+}
+.section_frame4 .form{
+margin-top:8px;
+}
+.section_frame4 .form th{
+padding-top:5px;
+padding-bottom:10px;
+}
+.section_frame4 .form td{
+padding-top:0;
+padding-bottom:5px;
+}
+.section_frame4 .form dd + dt{
+background:url(../img/bg_line_white.png) no-repeat 0 0;
+padding-top:6px;
+}
+
+/* テーブル */
+table.form{
+border:none;
+width:100%;
+}
+table.form caption{
+padding:12px 5px 7px;
+}
+table.form th{
+width:15%;
+padding:7px 5px;
+white-space:nowrap;
+}
+table.form td{
+width:85%;
+padding:2px 5px;
+}
+
+table.form p,
+table.form ol,
+table.form ul,
+table.form dl,
+table.form dd{
+margin:5px 0;
+}
+
+table.form ul{
+list-style:none;
+padding:0;
+}
+
+/* clearfix START */
+table.form ul:before,
+table.form ul:after{content:'';display:table;}
+table.form ul:after{clear:both;}
+table.form ul{zoom:1;}
+/* clearfix END */
+
+table.form li{
+float:left;
+margin-right:48px;
+white-space:nowrap;
+}
+table.form .column1{
+margin:2px 0;
+}
+table.form .column1 li{
+float:none;
+margin:3px 0;
+}
+table.form .column2 li{
+margin:0;
+width:50%;
+}
+table.form .column3 li{
+margin:0;
+width:33%;
+}
+table.form .column4 li{
+margin:0;
+width:25%;
+}
+
+
+
+#album-photos li {
+    height: 150px;
+}
+</style>
+
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+$(function(){
+	$('#album-photos').find('.caption').click(function() {
+
+		var caption = $(this)
+		,	checkbox = caption.find('input[type=checkbox]')
+		,	photo = caption.parents('li');
+
+		if (checkbox.prop('checked')) {
+			photo.addClass('checked');
+		} else {
+			photo.removeClass('checked');
+		}
+	});
+
+	$('#full-screen').mynavislideshow();
+});
+//-->
+</script>
+
+</head>
+<body>
+<div id="slideshow" class="contents">
+	<div id="album" class="section">
+		<ul id="album-photos" class="photos">
+			<li class="photo photo_s checked">
+				<a class="gallery" href="#"><img class="thumb gallery-photo image" src="../img/photo/photo1.jpg" alt="画像1です。" width="165"/></a>
+				<div class="caption">
+					<label><input type="checkbox" name="" class="checkbox" checked="checked" />
+					<span>check!</span></label>
+				</div>
+			</li>
+			<li class="photo photo_s checked">
+				<a class="gallery" href="#"><img class="thumb gallery-photo image" src="../img/photo/photo2.jpg" alt="画像2です。" width="165"/></a>
+				<div class="caption">
+					<label><input type="checkbox" name="" class="checkbox" checked="checked" />
+					<span>check!</span></label>
+				</div>
+			</li>
+			<li class="photo photo_s checked">
+				<a class="gallery" href="#"><img class="thumb gallery-photo image" src="../img/photo/photo3.jpg" alt="画像3です。" width="165" /></a>
+				<div class="caption">
+					<label><input type="checkbox" name="" class="checkbox" checked="checked" />
+					<span>check!</span></label>
+				</div>
+			</li>
+		</ul>
+	</div>
+
+	<div id="settings" class="section">
+		<h2 class="heading large"><span class="mark">スライドショーの設定</span></h2>
+		<div class="section_frame4">
+			<div class="inner">
+				<div class="content">
+				<table cellpadding="0" cellspacing="0" class="form" role="presentation">
+				<tbody>
+				<tr>
+					<th><span class="mark">メッセージ表示</span></th>
+					<td><ul>
+						<li><label><input type="radio" class="showMessage" name="showMessage" value="true" class="radio" checked="true" /><span>ON</span></label></li>
+						<li><label><input type="radio" class="showMessage" name="showMessage" value="false" class="radio" /><span>OFF</span></label></li>
+					</ul></td>
+				</tr>
+				<tr>
+					<th><span class="mark">切り替え時間</span></th>
+					<td><ul>
+						<li><label><input type="radio" class="switchTime" name="switchTime" value="3" class="radio" checked="true" /><span>3秒</span></label></li>
+						<li><label><input type="radio" class="switchTime" name="switchTime" value="5" class="radio" /><span>5秒</span></label></li>
+						<li><label><input type="radio" class="switchTime" name="switchTime" value="10" class="radio" /><span>10秒</span></label></li>
+					</ul></td>
+				</tr>
+				<tr>
+					<th><span class="mark">切り替え方法</span></th>
+					<td><ul>
+						<li><label><input type="radio" class="animateType" name="animateType" value="0" class="radio" checked="true" /><span>フェードイン・アウト</span></label></li>
+						<li><label><input type="radio" class="animateType" name="animateType" value="1" class="radio" /><span>左右スライド</span></label></li>
+						<li><label><input type="radio" class="animateType" name="animateType" value="2" class="radio" /><span>上下スライド</span></label></li>
+					</ul></td>
+				</tr>
+				<tr>
+					<th><span class="mark">ループ再生の有無</span></th>
+					<td><ul>
+						<li><label><input type="radio" class="doLoop" name="doLoop" value="true" class="radio" checked="true" /><span>ループ再生する</span></label></li>
+						<li><label><input type="radio" class="doLoop" name="doLoop" value="false" class="radio" /><span>ループ再生しない（全写真を表示したらスライドショーを終了）</span></label></li>
+					</ul></td>
+				</tr>
+				<tr>
+					<th><span class="mark">写真表示順</span></th>
+					<td><ul>
+						<li><label><input type="radio" class="showType" name="showType" class="radio" value="false" checked="true" /><span>投稿日時</span></label></li>
+						<li><label><input type="radio" class="showType" name="showType" class="radio" value="true" /><span>ランダム</span></label></li>
+					</ul></td>
+				</tr>
+				</tbody>
+				</table>
+
+				<p class="showslide button"><input type="image" class="slideshow" src="../img/btn_slideshow.png" alt="スライドショーを表示する" /></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="full-screen" class="window full-screen display-none">
+
+		<h1 class="heading">タイトル</h1>
+		
+		<ul id="slide-photos" class="photos"></ul>
+		
+		<div class="text">
+			<p id="slide-description" class="description"></p>
+			<p class="author">いせさんのアルバム</p>
+		</div>
+
+		<p class="sub">※終了するには、画面をクリックするかESCキーを押してください。</p>
+		<p id="close-fullscreen" class="button"><a href="#"><img src="../img/btn_full-screen_close.png" alt="閉じる" width="26" height="26" class="imgover" /></a></p>
+	</div>
+</div>
+</body>
+</html>

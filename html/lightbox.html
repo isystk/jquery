@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+/* テーブル */
+table.form{
+border:none;
+width:100%;
+}
+table.form caption{
+padding:12px 5px 7px;
+}
+table.form th{
+width:15%;
+padding:7px 5px;
+white-space:nowrap;
+}
+table.form td{
+width:85%;
+padding:2px 5px;
+}
+
+table.form p,
+table.form ol,
+table.form ul,
+table.form dl,
+table.form dd{
+margin:5px 0;
+}
+
+table.form ul{
+list-style:none;
+padding:0;
+}
+
+/* clearfix START */
+table.form ul:before,
+table.form ul:after{content:'';display:table;}
+table.form ul:after{clear:both;}
+table.form ul{zoom:1;}
+/* clearfix END */
+
+table.form li{
+float:left;
+margin-right:48px;
+white-space:nowrap;
+}
+table.form .column1{
+margin:2px 0;
+}
+table.form .column1 li{
+float:none;
+margin:3px 0;
+}
+table.form .column2 li{
+margin:0;
+width:50%;
+}
+table.form .column3 li{
+margin:0;
+width:33%;
+}
+table.form .column4 li{
+margin:0;
+width:25%;
+}
+
+.stockkodawariRel{
+	border:none;
+	background:url(../img/bg_search.png) repeat 0 0;
+	width:870px;
+	padding:5px;
+}
+.stockkodawariRel .inner{
+	border:none;
+	padding:30;
+}
+
+.stockkodawariRel .lightButton {
+	text-align:center;
+}
+
+.stockkodawariRel .closeBtnArea {
+	text-align:right;
+}
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+$(function() {
+
+	// ライトボックスの表示
+	$('#showBtn').click(function(e) {
+		e.preventDefault();
+		$.mLightBox({mLightBoxId: '#stockKodawariRel'});
+	});
+
+	// ライトボックスの閉じるボタン
+	$('#closeBtn').click(function(e) {
+		e.preventDefault();
+		$.mLightBox.close();
+	});
+
+});
+</script>
+</head>
+<body>
+	<p>
+		<a href="#" id="showBtn">クリック</a>
+	</p>
+
+	<div class="window stockkodawariRel display-none" id="stockKodawariRel">
+		<div class="inner">
+		<table cellpadding="0" cellspacing="0" class="form" role="presentation">
+		<tbody>
+			<tr>
+				<th><span>検索条件を選択してください</span></th>
+				<td class="closeBtnArea"><a href="#" id="closeBtn"><img src="../img/btn_full-screen_close.png" alt="閉じる"/></a></td>
+			</tr>
+			
+				<tr>
+					<th><span>都道府県</span></th>
+					<td>
+						<ul>
+							
+								<li><label><input type="checkbox" name="regionId" value="1" class="checkbox">東京都</label></li>
+							
+								<li><label><input type="checkbox" name="regionId" value="2" class="checkbox">埼玉県</label></li>
+							
+								<li><label><input type="checkbox" name="regionId" value="3" class="checkbox">千葉県</label></li>
+							
+								<li><label><input type="checkbox" name="regionId" value="4" class="checkbox">神奈川県</label></li>
+							
+						</ul>
+					</td>
+				</tr>
+				</tbody>
+		</table>
+		<p class="lightButton"><input type="button" name="search"  value="検索する" id="searchBtn"></p>
+		</div>
+	</div>
+	
+</body>
+</html>

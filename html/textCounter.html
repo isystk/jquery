@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+$(function () {
+	// テキストエリア
+	var textarea = $("textarea[name='sample']");
+	
+	// カウンタ
+	textarea.charCount({
+		allowed : textarea.attr('max'),
+		counterTarget : '#usecaseCounter',
+		cssWarning: 'text_red'
+	})
+	
+	// 入力エリアを広げる
+	$("#hid_usecase").val("open");
+	$("#grow_usecase").click(function(){
+		toggleArea(textarea, $(this));
+		return false;
+	});
+
+	function toggleArea(textarea, link){
+		var height=textarea.height();
+		if( "open" == link.parent().next().val() ){
+			//入力エリアを広げる
+			textarea.animate({height: height*2 +"px"}, "normal");
+			link.text("入力エリアを元に戻す");
+			link.parent().next().val("close");
+		}
+		else {
+			//入力エリアを元に戻す
+			textarea.animate({height: height/2 +"px"}, "normal");
+			link.text("入力エリアを広げる");
+			link.parent().next().val("open");
+		}
+	}
+
+})
+
+// -->
+</script>
+
+</head>
+<body>
+<textarea name="sample" style="height: 100px; width: 500px; display: inline;" max="50" >サンプル</textarea>
+<p class="information">あと<span id="usecaseCounter">122</span><span>文字</span>入力できます。</p>
+<p class="add_area_open"><a id="grow_usecase" href="#">入力エリアを広げる</a></p>
+<input type="hidden" id="hid_usecase" value="open">
+</body>
+</html>
+

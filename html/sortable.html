@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+.dragdropSortTable,
+.dragdropSortTable li table{
+	margin:0px 0px 0px 0px !important;
+	border-top:none !important;
+}
+.dragdropSortTable li table td{
+	background:white;
+}
+#dragdropListBox li.ui-sortable-placeholder{
+	background: #f4f4f4;
+	visibility: visible !important;
+}
+
+.sortTable {
+	border-top:1px solid #663300;
+	border-left:1px solid #663300;
+	border-collapse:collapse;
+	border-spacing:0;
+	background-color:#ffffff;
+	empty-cells:show;
+	margin: 0px;
+}
+.sortTable th{
+	border-right:1px solid #663300;
+	border-bottom:1px solid #663300;
+	color:#330000;
+	background-color:#D0EFFB;
+	background-position:left top;
+	padding:0.3em 1em;
+	text-align:center;
+}
+.sortTable td{
+	border-right:1px solid #663300;
+	border-bottom:1px solid #663300;
+	padding:0.3em 1em;
+}
+
+.selectLine {
+	text-align:center;
+}
+
+ul.sortUl {
+	margin: 0 0 0 0em;
+	padding: 0;
+}
+
+ul.sortUl li {
+	list-style:none;
+}
+
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+
+$(function(){
+
+	// 「行追加」ボタン押下時
+	$("#addBtn").click(function(){
+		$('.sortLine').clone()
+			.removeClass('sortLine')
+			.find('.button').empty().append('<input type="button" value="削除" class="deleteBtn"/>').end()
+			.find('.deleteBtn')
+				.bind('click', function() {
+					$(this).parents('li:first').remove();
+				})
+			.end()
+			.find('input[name="from"]').val('').end()
+			.find('input[name="end"]').val('').end()
+			.appendTo($(this).parents('ul:first'));
+
+		$("#sampleTable").sortable({
+			handle : '.handle',
+			cursor : 'move',
+			opacity: 0.5,
+			update: function(event, ui) {
+				console.log($(this).sortable('serialize'));
+			}
+		});
+
+	});
+});
+
+//-->
+</script>
+
+</head>
+<body>
+<p>下のアイコンをドラッグして一覧を並べ替えることが出来ます。</p>
+<table cellspacing="0" cellpadding="0" border="0" class="sortTable">
+<tbody>
+<tr>
+	<th width="50"><br/></th>
+	<th width="400"><br/></th>
+	<th width="80"><br/></th>
+</tr>
+</tbody>
+</table>
+<ul id="sampleTable" class="sortUl">
+	<li class="sortLine">
+		<table cellspacing="0" cellpadding="0" border="0" class="sortTable">
+			<tbody>
+			<tr>
+                <td width="50"><p class="selectLine"><a href="#" class="handle"><img src="../img/icon-sort.png"></a></p></td>
+				<td width="400">
+				</td>
+			   	<td class="button" width="80"><input type="button" class="inputbtn" value="追加する" id="addBtn"></td>
+			</tr>
+			</tbody>
+		</table>
+	</li>
+</ul>
+</body>
+</html>
