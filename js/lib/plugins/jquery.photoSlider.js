@@ -1,4 +1,4 @@
-;(function($) {
+(function($) {
 	/*
 	 * mynavislider *
 	 * Copyright (c) 2013 iseyoshitaka
@@ -7,85 +7,136 @@
 	 *  画像スライダー
 	 *
 	 * Sample:
-	 * $('#thumbs').mynavislider({
-	 * 	'easing': 'easeInOutCirc'
-	 * ,	'duration': 150
-	 * ,	'shift':	5
+	 * var slide1 = $('#slide1 .screen').mynavislider({
+	 * 	'easing': 'easeInOutCirc',
+	 * 	'carousel': false,
+	 * 	'backBtnKey': '#slide1 #gallery-back',
+	 * 	'nextBtnKey': '#slide1 #gallery-next',
+	 * 	'slideCallBack': function(data) {
+	 * 		$('#slide1 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+	 * 	}
 	 * });
+	 * $('#slide1 .changePage').click(function(e) {
+	 * 	e.preventDefault();
+	 * 	slide1.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.SLIDE);
+	 * });
+	 * 
 	 */
 	$.fn.mynavislider = function(options) {
 
-		var screen = null
-			,	ul = null
-			,	li = null
+		var screen = null // 処理対象エリア
+			,	ul = null // 親要素
+			,	li = null // 子要素
 			,	back = null // 前ページボタン
 			,	next = null // 次ページボタン
 			,	pos = 0 // 画像のポジション
 			,	pageNo = 1 // 現在のページ番号
 			,	maxPageNo = 1 // 最大のページ番号
 			,	liwidth = 0 // 子要素の横幅
-			,	shiftw = 0 // １ページにスライドさせる幅
 			,	nowLoading = false // 処理中かどうか
 			,	dragw = 0 // スワイプした横幅
-			,	dispCount = 0; // １ページに表示する子要素の件数
+			,	childKey = null
+			,	shift = null
+			,	margin = 0
+			,	dispCount = 0
+			,	shiftw = 0
+			,	animateType = null
+			,	slideSpeed = null
+			,	easing = null
+			,	carousel = null
+			,	slideCallBackFunc = null
+			,	resizeCallBackFunc = null
+			,	isAutoSlide = null
+			,	autoSlideInterval = null
+			,	hoverPause = null
+			,	isMouseDrag = null
+			,	reboundw = null
+			,	isFullScreen = false
+			,	isSlideCallBack = null;
 
 		var params = $.extend({}, $.fn.mynavislider.defaults, options);
 
-		// jQueryオブジェクトキャッシュ、移動量の初期設定を行う
+		// jQueryオブジェクトキャッシュ、初期設定を行う
 		var init = function(obj) {
 			screen = $(obj);
-			back = $(params.backBtnKey);
-			next = $(params.nextBtnKey);
 			ul = screen.find(params.parentKey);
 			li = ul.find(params.childKey);
+			back = $(params.backBtnKey);
+			next = $(params.nextBtnKey);
 			dispCount = params.dispCount || params.shift;
+			childKey = params.childKey;
+			animateType = params.animateType;
+			isAutoSlide = params.autoSlide;
+			autoSlideInterval = params.autoSlideInterval;
+			hoverPause = params.hoverPause;
+			isMouseDrag = params.isMouseDrag;
+			reboundw = params.reboundw;
+			slideSpeed = params.slideSpeed;
+			easing = params.easing;
+			shift = params.shift;
+			margin = params.margin;
+			carousel = params.carousel;
+			isFullScreen = params.isFullScreen;
+			slideCallBackFunc = params.slideCallBack;
+			resizeCallBackFunc = params.resizeCallBack;
 
-			if (params.shiftw) {
-				liwidth = Math.ceil(params.shiftw/params.shift);
+			if (isFullScreen) {
+				ul.find(childKey).width(Math.ceil($(window).width() /dispCount) - Math.ceil(margin/dispCount));
+				liwidth = ul.find(childKey).width();
+				shiftw = (liwidth + margin) * shift;
+				fullScreen();
+			} else if (params.shiftw) {
+				liwidth = Math.ceil(params.shiftw/shift);
 				shiftw = params.shiftw;
 			} else {
 				liwidth = li.width();
-				shiftw = liwidth * params.shift;
+				shiftw = liwidth * shift;
 			}
-			maxPageNo = Math.ceil(li.size()/params.shift);
+			maxPageNo = Math.ceil(li.size()/shift);
 
-			// １画像の場合はスライド不要の為、ローテートは強制OFFとする。
+			// １ページの場合はスライド不要の為、カルーセルは強制OFFとする。
 			if (maxPageNo <= 1) {
-				params.carousel = false;
+				carousel = false;
+				isMouseDrag = false;
 			}
 
-			if (params.carousel) {
+			bindEvent();
+		};
+		
+		var bindEvent = function() {
+
+			if (carousel) {
 				// カルーセルの初期設定を行う
 				initCarousel();
 				pos = li.size()/2;
 			} else {
 				// ページングボタンの表示制御
 				showArrows();
-				pos = params.shift;
+				pos = shift;
 			}
 
 			// ulタグの横幅を調整する
-			ul.css('width', shiftw * li.size() / params.shift)
+			ul.css('width', shiftw * li.size() / shift)
 				.css('position', 'relative');
 
 			li.css('float', 'left');
 
-			// マウスドラッグでのページングを可能にする
-			if (params.isMouseDrag) {
+			// スワイプでのページングを可能にする
+			if (isMouseDrag) {
 				bindMouseDragEvent();
 			}
 
-			// マウスクリックでのページングを可能にする
-			bindMouseClickEvent();
+			// ページングを可能にする
+			bindPagingEvent();
 
 			// 自動のページングを可能にする。
-			if (params.autoSlide) {
+			if (isAutoSlide) {
 				autoSlide.init();
 			}
 
-		};
+		}
 
-		// 画像ギャラリーをスライドする
+		// 指定したページに移動する
 		var slide = function(page, animateType) {
 
 			if (!animateType) {
@@ -94,7 +145,7 @@
 
 			// 後処理
 			var after = function() {
-				if (params.carousel) {
+				if (carousel) {
 					doCarousel();
 				}
 
@@ -114,7 +165,7 @@
 			}
 
 			// カルーセルがない場合で、次ページが存在しない場合は、処理させない
-			if (!params.carousel) {
+			if (!carousel) {
 				if ((move < 0 && pageNo === 1) || (0 < move && pageNo === maxPageNo)) {
 					after();
 					return;
@@ -124,14 +175,14 @@
 			nowLoading = true;
 
 			var from = 0;
-			if (params.carousel) {
-				from = -1 * (pos/params.shift) * shiftw - dragw;
+			if (carousel) {
+				from = -1 * (pos/shift) * shiftw - dragw;
 			} else {
-				from = -1 * (pos-params.shift)/params.shift * shiftw - dragw;
+				from = -1 * (pos-shift)/shift * shiftw - dragw;
 			}
 			var to = from - (shiftw * move) + dragw;
 
-			pos = pos + (params.shift * move);
+			pos = pos + (shift * move);
 
 			// ページ番号
 			if (page < 1) {
@@ -143,27 +194,25 @@
 			}
 
 			// ページングボタンの表示制御
-			if (!params.carousel) {
+			if (!carousel) {
 				showArrows();
 			}
 
 			if (animateType === ANIMATE_TYPE.NO) {
 				// アニメーションを利用しない
-				if (1 < maxPageNo && params.carousel) {
-					pos = (page * params.shift) - params.shift;
+				if (1 < maxPageNo && carousel) {
 					ul.css('left', '-' + (pos * liwidth) + 'px');
 				} else {
-					pos = page * params.shift;
-					ul.css('left', '-' + ((pos - params.shift) * liwidth) + 'px');
+					ul.css('left', '-' + ((pos - shift) * liwidth) + 'px');
 				}
 				after();
 			} else if (animateType === ANIMATE_TYPE.SLIDE) {
-				if (!params.isMouseDrag) {
+				if (!isMouseDrag) {
 					// jQueryを利用したアニメーション
 					ul.animate(
 						{ left: to}
-					,	params.slideSpeed
-					,	params.easing
+					,	slideSpeed
+					,	easing
 					,	function() {
 							after();
 						}
@@ -175,7 +224,7 @@
 
 						var elem = ul[0];
 						var begin = +new Date();
-						var duration = params.slideSpeed;
+						var duration = slideSpeed;
 						var easing = function(time, duration) {
 							return -(time /= duration) * (time - 2);
 						};
@@ -185,6 +234,7 @@
 							if (time > duration) {
 								clearInterval(timer);
 								_now = to;
+								elem.style.left = _now + 'px';
 
 								after();
 								return;
@@ -199,13 +249,10 @@
 				}
 			} else if (animateType === ANIMATE_TYPE.FADE) {
 				ul.animate({'opacity': 0 }, 300, function() {
-					// アニメーションを利用しない
-					if (1 < maxPageNo && params.carousel) {
-						pos = (page * params.shift) - params.shift;
+					if (1 < maxPageNo && carousel) {
 						ul.css('left', '-' + (pos * liwidth) + 'px').animate({'opacity': 1}, 300);
 					} else {
-						pos = page * params.shift;
-						ul.css('left', '-' + ((pos - params.shift) * liwidth) + 'px').animate({'opacity': 1}, 300);
+						ul.css('left', '-' + ((pos - shift) * liwidth) + 'px').animate({'opacity': 1}, 300);
 					}
 					after();
 				});
@@ -237,13 +284,13 @@
 		var initCarousel = function() {
 
 			// 最終ページに空きが出来る場合は空のLIダグを追加する
-			var addSize = li.size()%params.shift;
+			var addSize = li.size()%shift;
 			if (addSize !== 0) {
-				for (var i=0, len=params.shift-addSize;i<len;i++) {
-					ul.append(ul.find(params.childKey).filter(':first').clone().empty().css('width', liwidth).css('height', li.height()));
+				for (var i=0, len=shift-addSize;i<len;i++) {
+					ul.append(ul.find(childKey).filter(':first').clone().empty().css('width', liwidth).css('height', li.height()));
 				}
 				// liを再キャッシュ
-				li = ul.find(params.childKey);
+				li = ul.find(childKey);
 			}
 
 			ul
@@ -251,7 +298,7 @@
 				.css('left', '-' + (liwidth*(li.size())) + 'px');
 
 			// liを再キャッシュ
-			li = ul.find(params.childKey);
+			li = ul.find(childKey);
 		};
 
 		// カルーセル
@@ -261,14 +308,15 @@
 				pos = (li.size()/2);
 				ul.css('left', '-' + (liwidth*pos) + 'px');
 			// 右端
-			} else if ((li.size()-params.shift - (dispCount - params.shift)) <= pos) {
-				pos = (li.size()/2)-params.shift - (dispCount - params.shift);
+			} else if ((li.size()-shift - (dispCount - shift)) <= pos) {
+				var range = pos - (li.size()-shift - (dispCount - shift));
+				pos = (li.size()/2)-shift - (dispCount - shift) + range;
 				ul.css('left', '-' + (liwidth*pos) + 'px');
 			}
 		};
 
-		// マウスクリックでのページングを可能にする
-		var bindMouseClickEvent = function() {
+		// ページングを可能にする
+		var bindPagingEvent = function() {
 			// 左方向へスライドする
 			back.click(function(e) {
 				e.preventDefault();
@@ -282,7 +330,7 @@
 			});
 		};
 
-		// マウスドラッグでのページングを可能にする
+		// スワイプでのページングを可能にする
 		var bindMouseDragEvent = function() {
 			var isTouch = ('ontouchstart' in window);
 			ul.bind({
@@ -296,10 +344,15 @@
 					}
 					nowLoading = true;
 
+					// 自動スライドのタイマーをリセットする。
+					if (autoSlide.on) {
+						autoSlide.restart();
+					}
+
 					// 開始位置を覚えておく
 					this.pageX= ((isTouch && event.changedTouches) ? event.changedTouches[0].pageX : e.pageX);
 					this.pageY= ((isTouch && event.changedTouches) ? event.changedTouches[0].pageY : e.pageY);
-					this.left = $(this).position().left;
+					this.left = parseInt($(this).css('left'));
 					this.startLeft = this.left;
 
 					this.touched = true;
@@ -314,11 +367,13 @@
 					var x = (this.pageX - ((isTouch && event.changedTouches) ? event.changedTouches[0].pageX : e.pageX));
 					var y = (this.pageY - ((isTouch && event.changedTouches) ? event.changedTouches[0].pageY : e.pageY));
 
-					if (5 < Math.abs(x)) {
+					if (Math.abs(x) < 5 || 20 < Math.abs(y)) {
+						// スワイプさせない
+						return;
+					} else {
+						// スワイプさせる
 						event.preventDefault();
 						event.stopPropagation();
-					} else if (5 < Math.abs(y)) {
-						return;
 					}
 					// 移動先の位置を取得する
 					this.left = this.left - x;
@@ -340,25 +395,61 @@
 					// スワイプの移動量
 					dragw = this.startLeft - this.left;
 
-					// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
-					if ((Math.abs(dragw) < params.reboundw) || (!params.carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
-						ul.animate(
-							{ left: '-=' + (-1 * dragw)},
-							function() {
+					// スワイプした場合は、その他のイベントを停止する。
+					if (dragw !== 0) {
+						event.stopImmediatePropagation();
+					}
+
+					// リバウンド処理
+					var rebound = function(self) {
+						var from = self.startLeft - dragw;
+						var to = self.startLeft;
+						
+						var elem = ul[0];
+						var begin = +new Date();
+						var duration = slideSpeed;
+						var easing = function(time, duration) {
+							return -(time /= duration) * (time - 2);
+						};
+						var timer = setInterval(function() {
+							var time = new Date() - begin;
+							var _pos, _now;
+							if (time > duration) {
+								clearInterval(timer);
+								_now = to;
+								elem.style.left = _now + 'px';
+
 								nowLoading = false;
+								dragw = 0;
 							}
-						);
-						dragw = 0;
+							else {
+								_pos = easing(time, duration);
+								_now = _pos * (to - from) + from;
+							}
+							elem.style.left = _now + 'px';
+						}, 10);
+
 					}
 
 					if (dragw < 0) {
-						// 前ページ
-						slide(pageNo-1, ANIMATE_TYPE.SLIDE);
+						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+							rebound(this);
+						} else {
+							// 前ページ
+							slide(pageNo-1, ANIMATE_TYPE.SLIDE);
+						}
 					} else if (0 < dragw) {
-						// 次ページ
-						slide(pageNo+1, ANIMATE_TYPE.SLIDE);
+						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+							rebound(this);
+						} else {
+							// 次ページ
+							slide(pageNo+1, ANIMATE_TYPE.SLIDE);
+						}
 					} else {
 						// 何もしない
+						nowLoading = false;
 					}
 				}
 			});
@@ -369,51 +460,107 @@
 			var timer = null;
 			this.on = false;
 			this.init = function() {
-				this.on = true;
 				start();
-				if (params.hoverPause) {
-					$(li).hover(function() {
-						stop();
+				if (hoverPause) {
+					$(ul).hover(function() {
+						stopTimer();
 					}, function() {
-						start();
+						startTimer();
 					});
 				}
 			};
 			this.restart = function() {
-				stop();
-				start();
+				stopTimer();
+				startTimer();
 			};
 			var start = this.start = function() {
+				autoSlide.on = true;
+				startTimer();
+			};
+			function startTimer() {
 				if (!autoSlide.on) {
 					return;
 				}
 				timer = setTimeout(function() {
 					clearInterval(timer);
-					slide(pageNo+1, params.animateType);
-					start();
-				} , params.autoSlideInterval);
-			};
+					slide(pageNo+1, animateType);
+					startTimer();
+				} , autoSlideInterval);
+			}
 			var stop = this.stop = function() {
+				stopTimer();
+				autoSlide.on = false;
+			};
+			function stopTimer() {
 				if (!autoSlide.on) {
 					return;
 				}
 				clearInterval(timer);
 				timer = null;
-			};
+			}
 		})();
+
+		// 子要素をフルスクリーンで表示します。
+		var fullScreen = function() {
+			// スライダーで設定した変更を元に戻します。
+			var unbindSlider = function() {
+				// オートスライドのマイマーをリセット
+				if (autoSlide) {
+					autoSlide.stop();
+				}
+				// クリック時のバインドをリセット
+				back.unbind();
+				next.unbind();
+				// スワイプのイベントをリセット
+				ul.unbind();
+				// ローテート用の番兵を削除
+				ul.find(childKey + '.cloned').remove();
+				// liを再キャッシュ
+				li = ul.find(childKey);
+			};
+			// スライダーを生成し直します。
+			var createSlider = function() {
+				
+				// 子要素の横幅を端末のwidthに設定
+				ul.find(childKey).width(Math.ceil($(window).width() /dispCount) - Math.ceil(margin/dispCount));
+				liwidth = ul.find(childKey).width();
+				shiftw = (liwidth + margin) * shift;
+				bindEvent();
+
+				// リサイズ時は、コールバックは呼ばない。
+				var workSlideCallBackFunc = slideCallBackFunc;
+				slideCallBackFunc = null;
+				changePage(1);
+				slideCallBackFunc = workSlideCallBackFunc;
+
+				if (resizeCallBackFunc) {
+					resizeCallBackFunc();
+				}
+			};
+			// 画面が回転された場合
+			$(window).on('orientationchange',function(){
+				unbindSlider();
+				createSlider();
+			});
+			// 画面がリサイズされた場合
+			$(window).resize(function() {
+				unbindSlider();
+				createSlider();
+			});
+		};
 
 		// コールバック
 		var slideCallBack = function() {
-			if (params.slideCallBack) {
+			if (slideCallBackFunc) {
 				var data = {};
 				data.pageNo = pageNo;
 				data.maxPageNo = maxPageNo;
-				if (params.carousel) {
+				if (carousel) {
 					data.obj = $(li[pos]);
 				} else {
-					data.obj = $(li[(pos-params.shift)]);
+					data.obj = $(li[(pos-shift)]);
 				}
-				params.slideCallBack(data);
+				slideCallBackFunc(data);
 			}
 		};
 
@@ -428,7 +575,7 @@
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo-1, params.animateType);
+			slide(pageNo-1, animateType);
 		}
 
 		// 次ページを表示します。
@@ -440,11 +587,11 @@
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo+1, params.animateType);
+			slide(pageNo+1, animateType);
 		}
 
 		// 指定したページを表示します。
-		this.changePage = function(page, animateType) {
+		var changePage = this.changePage = function(page, animateType) {
 			var page = parseInt(page) || 1;
 			if (maxPageNo < page) {
 				return;
@@ -476,6 +623,7 @@
 			'parentKey': 'ul' // 親要素
 		,	'childKey': 'li' // 子要素
 		,	'shift': 5 // １ページでスライドさせる画像数
+		,	'margin': 0 // 子要素間のマージン
 		,	'dispCount': null // １ページに表示する子要素の件数(shiftで指定した値と１ページに表示する子要素の数が異なる場合にのみ指定する)
 		,	'shiftw': null // １ページでにスライドさせる幅(子要素にmarginなどの余白が指定されている場合に、自動で幅が算出できないためこれを指定する。)
 		,	'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類
@@ -489,8 +637,11 @@
 		,	'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
 		,	'isMouseDrag': false // スワイプでのページングを可能にするかどうか
 		,	'reboundw': 20 // スワイプ時に跳ね返りを行う幅
+		,	'isFullScreen': false // １ページ分をフルスクリーンで表示するかどうか
 		,	'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
+		,	'resizeCallBack': null // 画面リサイズ後に処理を行うコールバック
 	};
 
 })(jQuery);
+
 
