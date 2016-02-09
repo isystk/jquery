@@ -2749,7 +2749,8 @@ Dialog.prototype = {
 })(jQuery);
 
 
-;(function($) {
+
+(function($) {
 	/*
 	 * mynavislider *
 	 * Copyright (c) 2013 iseyoshitaka
@@ -2758,85 +2759,164 @@ Dialog.prototype = {
 	 *  画像スライダー
 	 *
 	 * Sample:
-	 * $('#thumbs').mynavislider({
-	 * 	'easing': 'easeInOutCirc'
-	 * ,	'duration': 150
-	 * ,	'shift':	5
+	 * var slide1 = $('#slide1 .screen').mynavislider({
+	 * 	'carousel': false,
+	 * 	'backBtnKey': '#slide1 #gallery-back',
+	 * 	'nextBtnKey': '#slide1 #gallery-next',
+	 * 	'slideCallBack': function(data) {
+	 * 		$('#slide1 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+	 * 	}
 	 * });
+	 * $('#slide1 .changePage').click(function(e) {
+	 * 	e.preventDefault();
+	 * 	slide1.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.SLIDE);
+	 * });
+	 * 
 	 */
 	$.fn.mynavislider = function(options) {
 
-		var screen = null
-			,	ul = null
-			,	li = null
+		var screen = null // 処理対象エリア
+			,	ul = null // 親要素
+			,	li = null // 子要素
 			,	back = null // 前ページボタン
 			,	next = null // 次ページボタン
 			,	pos = 0 // 画像のポジション
 			,	pageNo = 1 // 現在のページ番号
 			,	maxPageNo = 1 // 最大のページ番号
 			,	liwidth = 0 // 子要素の横幅
-			,	shiftw = 0 // １ページにスライドさせる幅
 			,	nowLoading = false // 処理中かどうか
 			,	dragw = 0 // スワイプした横幅
-			,	dispCount = 0; // １ページに表示する子要素の件数
+			,	childKey = null
+			,	shift = null
+			,	margin = 0
+			,	dispCount = 0
+			,	shiftw = 0
+			,	animateType = null
+			,	slideSpeed = null
+			,	carousel = null
+			,	slideCallBackFunc = null
+			,	resizeCallBackFunc = null
+			,	isAutoSlide = null
+			,	autoSlideInterval = null
+			,	hoverPause = null
+			,	isMouseDrag = null
+			,	reboundw = null
+			,	isFullScreen = false
+			,	heightMaxScreen = false
+			,	isSlideCallBack = null;
 
 		var params = $.extend({}, $.fn.mynavislider.defaults, options);
 
-		// jQueryオブジェクトキャッシュ、移動量の初期設定を行う
+		// jQueryオブジェクトキャッシュ、初期設定を行う
 		var init = function(obj) {
 			screen = $(obj);
-			back = $(params.backBtnKey);
-			next = $(params.nextBtnKey);
 			ul = screen.find(params.parentKey);
 			li = ul.find(params.childKey);
+			back = $(params.backBtnKey);
+			next = $(params.nextBtnKey);
 			dispCount = params.dispCount || params.shift;
+			childKey = params.childKey;
+			animateType = params.animateType;
+			isAutoSlide = params.autoSlide;
+			autoSlideInterval = params.autoSlideInterval;
+			hoverPause = params.hoverPause;
+			isMouseDrag = params.isMouseDrag;
+			reboundw = params.reboundw;
+			slideSpeed = params.slideSpeed;
+			shift = params.shift;
+			margin = params.margin;
+			carousel = params.carousel;
+			isFullScreen = params.isFullScreen;
+			heightMaxScreen = params.heightMaxScreen;
+			slideCallBackFunc = params.slideCallBack;
+			resizeCallBackFunc = params.resizeCallBack;
 
-			if (params.shiftw) {
-				liwidth = Math.ceil(params.shiftw/params.shift);
+			if (heightMaxScreen) {
+				// 画像縦幅を端末サイズに合わせる為オリジナル画像サイズが必要になる。画像を事前にロードしておく。
+				var photos = ul.find(childKey).find('img');
+				var photoLength = photos.length;
+				photos.each(function() {
+					var photo = $(this),
+						imagePath = photo.attr('src') || '';
+					var img = $('<img>');
+					img
+						.load(function() {
+							photo.attr('owidth', img[0].width);
+							photo.attr('oheight', img[0].height);
+							if (photoLength !== 1) {
+								photoLength--;
+								return;
+							}
+							photos.unbind('load');
+							// 画像のロードが完了したらスタート
+							exec();
+						});
+					img.attr('src', imagePath);
+				});
+			} else {
+				exec();
+			}
+			
+		};
+		
+		var exec = function() {
+			if (isFullScreen) {
+				fullScreen();
+			} else if (params.shiftw) {
+				liwidth = Math.ceil(params.shiftw/shift);
 				shiftw = params.shiftw;
 			} else {
 				liwidth = li.width();
-				shiftw = liwidth * params.shift;
+				shiftw = liwidth * shift;
 			}
-			maxPageNo = Math.ceil(li.size()/params.shift);
+			maxPageNo = Math.ceil(li.size()/shift);
 
-			// １画像の場合はスライド不要の為、ローテートは強制OFFとする。
+			// １ページの場合はスライド不要の為、カルーセルは強制OFFとする。
 			if (maxPageNo <= 1) {
-				params.carousel = false;
+				carousel = false;
+				isMouseDrag = false;
 			}
 
-			if (params.carousel) {
+			bindEvent();
+			
+			// スライダーを設定したよっていうマークを付ける。
+			screen.addClass('slider-set-end');
+		};
+		
+		var bindEvent = function() {
+
+			if (carousel) {
 				// カルーセルの初期設定を行う
 				initCarousel();
 				pos = li.size()/2;
 			} else {
 				// ページングボタンの表示制御
 				showArrows();
-				pos = params.shift;
+				pos = shift;
 			}
 
 			// ulタグの横幅を調整する
-			ul.css('width', shiftw * li.size() / params.shift)
+			ul.css('width', shiftw * li.size() / shift)
 				.css('position', 'relative');
 
 			li.css('float', 'left');
 
-			// マウスドラッグでのページングを可能にする
-			if (params.isMouseDrag) {
+			// スワイプでのページングを可能にする
+			if (isMouseDrag) {
 				bindMouseDragEvent();
 			}
 
-			// マウスクリックでのページングを可能にする
-			bindMouseClickEvent();
+			// ページングを可能にする
+			bindPagingEvent();
 
 			// 自動のページングを可能にする。
-			if (params.autoSlide) {
+			if (isAutoSlide) {
 				autoSlide.init();
 			}
 
-		};
+		}
 
-		// 画像ギャラリーをスライドする
+		// 指定したページに移動する
 		var slide = function(page, animateType) {
 
 			if (!animateType) {
@@ -2845,13 +2925,13 @@ Dialog.prototype = {
 
 			// 後処理
 			var after = function() {
-				if (params.carousel) {
+				if (carousel) {
 					doCarousel();
 				}
 
 				nowLoading = false;
 				dragw = 0;
-
+				
 				// コールバック
 				slideCallBack();
 			};
@@ -2865,7 +2945,7 @@ Dialog.prototype = {
 			}
 
 			// カルーセルがない場合で、次ページが存在しない場合は、処理させない
-			if (!params.carousel) {
+			if (!carousel) {
 				if ((move < 0 && pageNo === 1) || (0 < move && pageNo === maxPageNo)) {
 					after();
 					return;
@@ -2875,14 +2955,14 @@ Dialog.prototype = {
 			nowLoading = true;
 
 			var from = 0;
-			if (params.carousel) {
-				from = -1 * (pos/params.shift) * shiftw - dragw;
+			if (carousel) {
+				from = -1 * (pos/shift) * shiftw - dragw;
 			} else {
-				from = -1 * (pos-params.shift)/params.shift * shiftw - dragw;
+				from = -1 * (pos-shift)/shift * shiftw - dragw;
 			}
 			var to = from - (shiftw * move) + dragw;
 
-			pos = pos + (params.shift * move);
+			pos = pos + (shift * move);
 
 			// ページ番号
 			if (page < 1) {
@@ -2894,69 +2974,53 @@ Dialog.prototype = {
 			}
 
 			// ページングボタンの表示制御
-			if (!params.carousel) {
+			if (!carousel) {
 				showArrows();
 			}
 
 			if (animateType === ANIMATE_TYPE.NO) {
 				// アニメーションを利用しない
-				if (1 < maxPageNo && params.carousel) {
-					pos = (page * params.shift) - params.shift;
+				if (1 < maxPageNo && carousel) {
 					ul.css('left', '-' + (pos * liwidth) + 'px');
 				} else {
-					pos = page * params.shift;
-					ul.css('left', '-' + ((pos - params.shift) * liwidth) + 'px');
+					ul.css('left', '-' + ((pos - shift) * liwidth) + 'px');
 				}
 				after();
 			} else if (animateType === ANIMATE_TYPE.SLIDE) {
-				if (!params.isMouseDrag) {
-					// jQueryを利用したアニメーション
-					ul.animate(
-						{ left: to}
-					,	params.slideSpeed
-					,	params.easing
-					,	function() {
-							after();
-						}
-					);
-				} else {
-					// jQueryを利用しないアニメーション(Androidでアニメーションが重いため)
-					(function() {
-						var self = this;
+				// jQueryを利用しないアニメーション(Androidでアニメーションが重いため)
+				(function() {
+					var self = this;
 
-						var elem = ul[0];
-						var begin = +new Date();
-						var duration = params.slideSpeed;
-						var easing = function(time, duration) {
-							return -(time /= duration) * (time - 2);
-						};
-						var timer = setInterval(function() {
-							var time = new Date() - begin;
-							var _pos, _now;
-							if (time > duration) {
-								clearInterval(timer);
-								_now = to;
-
-								after();
-								return;
-							}
-							else {
-								_pos = easing(time, duration);
-								_now = _pos * (to - from) + from;
-							}
+					var elem = ul[0];
+					var begin = +new Date();
+					var duration = slideSpeed;
+					var easing = function(time, duration) {
+						return -(time /= duration) * (time - 2);
+					};
+					var timer = setInterval(function() {
+						var time = new Date() - begin;
+						var _pos, _now;
+						if (time > duration) {
+							clearInterval(timer);
+							_now = to;
 							elem.style.left = _now + 'px';
-						}, 10);
-					})();
-				}
+
+							after();
+							return;
+						}
+						else {
+							_pos = easing(time, duration);
+							_now = _pos * (to - from) + from;
+						}
+						elem.style.left = _now + 'px';
+					}, 10);
+				})();
 			} else if (animateType === ANIMATE_TYPE.FADE) {
 				ul.animate({'opacity': 0 }, 300, function() {
-					// アニメーションを利用しない
-					if (1 < maxPageNo && params.carousel) {
-						pos = (page * params.shift) - params.shift;
+					if (1 < maxPageNo && carousel) {
 						ul.css('left', '-' + (pos * liwidth) + 'px').animate({'opacity': 1}, 300);
 					} else {
-						pos = page * params.shift;
-						ul.css('left', '-' + ((pos - params.shift) * liwidth) + 'px').animate({'opacity': 1}, 300);
+						ul.css('left', '-' + ((pos - shift) * liwidth) + 'px').animate({'opacity': 1}, 300);
 					}
 					after();
 				});
@@ -2988,13 +3052,13 @@ Dialog.prototype = {
 		var initCarousel = function() {
 
 			// 最終ページに空きが出来る場合は空のLIダグを追加する
-			var addSize = li.size()%params.shift;
+			var addSize = li.size()%shift;
 			if (addSize !== 0) {
-				for (var i=0, len=params.shift-addSize;i<len;i++) {
-					ul.append(ul.find(params.childKey).filter(':first').clone().empty().css('width', liwidth).css('height', li.height()));
+				for (var i=0, len=shift-addSize;i<len;i++) {
+					ul.append(ul.find(childKey).filter(':first').clone().empty().css('width', liwidth).css('height', li.height()));
 				}
 				// liを再キャッシュ
-				li = ul.find(params.childKey);
+				li = ul.find(childKey);
 			}
 
 			ul
@@ -3002,7 +3066,7 @@ Dialog.prototype = {
 				.css('left', '-' + (liwidth*(li.size())) + 'px');
 
 			// liを再キャッシュ
-			li = ul.find(params.childKey);
+			li = ul.find(childKey);
 		};
 
 		// カルーセル
@@ -3012,14 +3076,15 @@ Dialog.prototype = {
 				pos = (li.size()/2);
 				ul.css('left', '-' + (liwidth*pos) + 'px');
 			// 右端
-			} else if ((li.size()-params.shift - (dispCount - params.shift)) <= pos) {
-				pos = (li.size()/2)-params.shift - (dispCount - params.shift);
+			} else if ((li.size()-shift - (dispCount - shift)) <= pos) {
+				var range = pos - (li.size()-shift - (dispCount - shift));
+				pos = (li.size()/2)-shift - (dispCount - shift) + range;
 				ul.css('left', '-' + (liwidth*pos) + 'px');
 			}
 		};
 
-		// マウスクリックでのページングを可能にする
-		var bindMouseClickEvent = function() {
+		// ページングを可能にする
+		var bindPagingEvent = function() {
 			// 左方向へスライドする
 			back.click(function(e) {
 				e.preventDefault();
@@ -3033,13 +3098,12 @@ Dialog.prototype = {
 			});
 		};
 
-		// マウスドラッグでのページングを可能にする
+		// スワイプでのページングを可能にする
 		var bindMouseDragEvent = function() {
 			var isTouch = ('ontouchstart' in window);
 			ul.bind({
 				// タッチの開始、マウスボタンを押したとき
 				'touchstart mousedown': function(e) {
-
 					if (nowLoading) {
 						event.preventDefault();
 						event.stopPropagation();
@@ -3047,10 +3111,18 @@ Dialog.prototype = {
 					}
 					nowLoading = true;
 
+					// 自動スライドのタイマーをリセットする。
+					if (autoSlide.on) {
+						autoSlide.restart();
+					}
+
 					// 開始位置を覚えておく
 					this.pageX= ((isTouch && event.changedTouches) ? event.changedTouches[0].pageX : e.pageX);
 					this.pageY= ((isTouch && event.changedTouches) ? event.changedTouches[0].pageY : e.pageY);
-					this.left = $(this).position().left;
+					this.left = parseInt($(this).css('left'));
+					if(isNaN(this.left)) {
+						this.left = $(this).position().left;
+					}
 					this.startLeft = this.left;
 
 					this.touched = true;
@@ -3065,11 +3137,28 @@ Dialog.prototype = {
 					var x = (this.pageX - ((isTouch && event.changedTouches) ? event.changedTouches[0].pageX : e.pageX));
 					var y = (this.pageY - ((isTouch && event.changedTouches) ? event.changedTouches[0].pageY : e.pageY));
 
-					if (5 < Math.abs(x)) {
+					if (!carousel) {
+						// １ページ目は右にスワイプさせない。
+						if (pageNo <= 1 && x < 0) {
+							nowLoading = false;
+							this.touched = false;
+							return;
+						}
+						// 最後のページは左にスワイプさせない。
+						if (maxPageNo <= pageNo && 0 < x) {
+							nowLoading = false;
+							this.touched = false;
+							return;
+						}
+					}
+					
+					if (Math.abs(x) < 5 || 200 < Math.abs(y)) {
+						// スワイプさせない
+						return;
+					} else {
+						// スワイプさせる
 						event.preventDefault();
 						event.stopPropagation();
-					} else if (5 < Math.abs(y)) {
-						return;
 					}
 					// 移動先の位置を取得する
 					this.left = this.left - x;
@@ -3091,25 +3180,69 @@ Dialog.prototype = {
 					// スワイプの移動量
 					dragw = this.startLeft - this.left;
 
-					// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
-					if ((Math.abs(dragw) < params.reboundw) || (!params.carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
-						ul.animate(
-							{ left: '-=' + (-1 * dragw)},
-							function() {
+					// スワイプした場合は、その他のイベントを停止する。
+					if (dragw !== 0) {
+						event.stopImmediatePropagation();
+					}
+
+					// リバウンド処理
+					var rebound = function(self) {
+						var from = self.startLeft - dragw;
+						var to = self.startLeft;
+						
+						var elem = ul[0];
+						var begin = +new Date();
+						var duration = slideSpeed;
+						var easing = function(time, duration) {
+							return -(time /= duration) * (time - 2);
+						};
+						var timer = setInterval(function() {
+							var time = new Date() - begin;
+							var _pos, _now;
+							if (time > duration) {
+								clearInterval(timer);
+								_now = to;
+								elem.style.left = _now + 'px';
+
 								nowLoading = false;
+								dragw = 0;
 							}
-						);
-						dragw = 0;
+							else {
+								_pos = easing(time, duration);
+								_now = _pos * (to - from) + from;
+							}
+							elem.style.left = _now + 'px';
+						}, 10);
+
 					}
 
 					if (dragw < 0) {
-						// 前ページ
-						slide(pageNo-1, ANIMATE_TYPE.SLIDE);
+						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+							rebound(this);
+						} else {
+							var p = pageNo - Math.ceil(Math.abs(dragw)/shiftw);
+							if (!carousel && p <= 1) {
+								p = 1;
+							}
+							// 前ページ
+							slide(p, ANIMATE_TYPE.SLIDE);
+						}
 					} else if (0 < dragw) {
-						// 次ページ
-						slide(pageNo+1, ANIMATE_TYPE.SLIDE);
+						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+							rebound(this);
+						} else {
+							var p = pageNo + Math.ceil(Math.abs(dragw)/shiftw);
+							if (!carousel && maxPageNo <= p) {
+								p = maxPageNo;
+							}
+							// 次ページ
+							slide(p, ANIMATE_TYPE.SLIDE);
+						}
 					} else {
 						// 何もしない
+						nowLoading = false;
 					}
 				}
 			});
@@ -3120,51 +3253,151 @@ Dialog.prototype = {
 			var timer = null;
 			this.on = false;
 			this.init = function() {
-				this.on = true;
 				start();
-				if (params.hoverPause) {
-					$(li).hover(function() {
-						stop();
+				if (hoverPause) {
+					$(ul).hover(function() {
+						stopTimer();
 					}, function() {
-						start();
+						startTimer();
 					});
 				}
 			};
 			this.restart = function() {
-				stop();
-				start();
+				stopTimer();
+				startTimer();
 			};
 			var start = this.start = function() {
+				autoSlide.on = true;
+				startTimer();
+			};
+			function startTimer() {
 				if (!autoSlide.on) {
 					return;
 				}
 				timer = setTimeout(function() {
 					clearInterval(timer);
-					slide(pageNo+1, params.animateType);
-					start();
-				} , params.autoSlideInterval);
-			};
+					slide(pageNo+1, animateType);
+					startTimer();
+				} , autoSlideInterval);
+			}
 			var stop = this.stop = function() {
+				stopTimer();
+				autoSlide.on = false;
+			};
+			function stopTimer() {
 				if (!autoSlide.on) {
 					return;
 				}
 				clearInterval(timer);
 				timer = null;
-			};
+			}
 		})();
+
+		// 子要素をフルスクリーンで表示します。
+		var fullScreen = function() {
+			// スライダーで設定した変更を元に戻します。
+			var unbindSlider = function() {
+				// オートスライドのマイマーをリセット
+				if (autoSlide) {
+					autoSlide.stop();
+				}
+				// クリック時のバインドをリセット
+				back.unbind();
+				next.unbind();
+				// スワイプのイベントをリセット
+				ul.unbind();
+				// ローテート用の番兵を削除
+				ul.find(childKey + '.cloned').remove();
+				// liを再キャッシュ
+				li = ul.find(childKey);
+			};
+			// スライダーを生成し直します。
+			var createSlider = function() {
+				
+				// 子要素の横幅を端末のwidthに設定
+				ul.find(childKey).width(Math.ceil($(window).width() /dispCount) - Math.ceil(margin/dispCount));
+				
+				if (heightMaxScreen) {
+					ul.find(childKey).height($(window).height());
+					ul.find(childKey).each(function() {
+						var li = $(this),
+							img = li.find('img');
+
+						var x = Math.floor(img.attr('oheight') * $(window).width() / img.attr('owidth'));
+						var margin = Math.floor(($(window).height() - x) / 2);
+						if (0 <= margin) {
+							img.height('').width('100%');
+						} else {
+							img.height('100%').width('');
+						}
+						
+					});
+				}
+				
+				liwidth = ul.find(childKey).width();
+				shiftw = (liwidth + margin) * shift;
+
+			};
+			var resizeCallBack = function() {
+				if (resizeCallBackFunc) {
+					var data = {};
+					data.pageNo = pageNo;
+					data.maxPageNo = maxPageNo;
+					if (carousel) {
+						data.obj = $(li[pos]);
+					} else {
+						data.obj = $(li[(pos-shift)]);
+					}
+					resizeCallBackFunc(data);
+				}
+			};
+			// 画面が回転された場合
+			$(this).on('orientationchange',function(){
+				unbindSlider();
+				createSlider();
+				bindEvent();
+
+				// リサイズ時は、コールバックは呼ばない。
+				var workPageNo = pageNo;
+				var workSlideCallBackFunc = slideCallBackFunc;
+				slideCallBackFunc = null;
+				pageNo = 1;
+				changePage(workPageNo);
+				slideCallBackFunc = workSlideCallBackFunc;
+
+				resizeCallBack();
+			});
+			// 画面がリサイズされた場合
+			$(this).resize(function() {
+				unbindSlider();
+				createSlider();
+				bindEvent();
+
+				// リサイズ時は、コールバックは呼ばない。
+				var workPageNo = pageNo;
+				var workSlideCallBackFunc = slideCallBackFunc;
+				slideCallBackFunc = null;
+				pageNo = 1;
+				changePage(workPageNo);
+				slideCallBackFunc = workSlideCallBackFunc;
+
+				resizeCallBack();
+			});
+			createSlider();
+		};
 
 		// コールバック
 		var slideCallBack = function() {
-			if (params.slideCallBack) {
+			if (slideCallBackFunc) {
 				var data = {};
 				data.pageNo = pageNo;
 				data.maxPageNo = maxPageNo;
-				if (params.carousel) {
+				if (carousel) {
 					data.obj = $(li[pos]);
 				} else {
-					data.obj = $(li[(pos-params.shift)]);
+					data.obj = $(li[(pos-shift)]);
 				}
-				params.slideCallBack(data);
+				slideCallBackFunc(data);
 			}
 		};
 
@@ -3179,7 +3412,7 @@ Dialog.prototype = {
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo-1, params.animateType);
+			slide(pageNo-1, animateType);
 		}
 
 		// 次ページを表示します。
@@ -3191,11 +3424,11 @@ Dialog.prototype = {
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo+1, params.animateType);
+			slide(pageNo+1, animateType);
 		}
 
 		// 指定したページを表示します。
-		this.changePage = function(page, animateType) {
+		var changePage = this.changePage = function(page, animateType) {
 			var page = parseInt(page) || 1;
 			if (maxPageNo < page) {
 				return;
@@ -3206,6 +3439,13 @@ Dialog.prototype = {
 			}
 			slide(page, animateType);
 		}
+
+		// スライドコールバックで次ページ要素をAjax取得してLIに追加した場合などに、最大ページなどの情報をリフレッシュする。
+		var refresh = this.refresh = function () {
+			li = ul.find(params.childKey);
+			maxPageNo = Math.ceil(li.size()/shift);
+			showArrows();
+		};
 
 		// 処理開始
 		$(this).each(function() {
@@ -3227,11 +3467,11 @@ Dialog.prototype = {
 			'parentKey': 'ul' // 親要素
 		,	'childKey': 'li' // 子要素
 		,	'shift': 5 // １ページでスライドさせる画像数
+		,	'margin': 0 // 子要素間のマージン
 		,	'dispCount': null // １ページに表示する子要素の件数(shiftで指定した値と１ページに表示する子要素の数が異なる場合にのみ指定する)
 		,	'shiftw': null // １ページでにスライドさせる幅(子要素にmarginなどの余白が指定されている場合に、自動で幅が算出できないためこれを指定する。)
 		,	'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類
 		,	'slideSpeed': 300 // スライド速度
-		,	'easing': 'easeInOutCirc' // スライドアニメーションの種類
 		,	'carousel': false // ローテートさせるかどうか
 		,	'backBtnKey': '#gallery-back' // 次ページボタン
 		,	'nextBtnKey': '#gallery-next' // 前ページボタン
@@ -3239,11 +3479,17 @@ Dialog.prototype = {
 		,	'autoSlideInterval':  5000 // 自動スライドさせる間隔(ミリ秒)
 		,	'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
 		,	'isMouseDrag': false // スワイプでのページングを可能にするかどうか
-		,	'reboundw': 20 // スワイプ時に跳ね返りを行う幅
+		,	'reboundw': 50 // スワイプ時に跳ね返りを行う幅
+		,	'isFullScreen': false // 端末の画面横幅いっぱいに画像を表示する
+		,	'heightMaxScreen': false // 画像縦幅が端末縦幅よりも大きい場合は端末縦幅いっぱいに表示する（isFullScreen がtrueの場合のみ有効）
 		,	'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
+		,	'resizeCallBack': null // 画面リサイズ後に処理を行うコールバック
 	};
 
 })(jQuery);
+
+
+
 
 (function($) {
 
@@ -5409,6 +5655,7 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 			screen = null,
 			targetClass = null,
 			animateType = null,
+			originalSize = null,
 			imageUrl = null,
 			slideSpeed = null,
 			easing = null,
@@ -5416,147 +5663,336 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 			autoSlide = null,
 			autoSlideInterval = null,
 			hoverPause = null,
-			slideCallBack = null;
+			slideCallBack = null,
+			openCallBack = null,
+			isFullScreen = null,
+			showClip = false;
+
+		var className = "zoomPhotoPanel";
 		
 		// 初期設定
 		var init = function(obj) {
 
-			screen = $(obj);
-			targetClass = params.targetClass;
-			animateType = params.animateType;
-			imageUrl = params.imageUrl;
-			slideSpeed = params.slideSpeed;
-			easing = params.easing;
-			carousel = params.carousel;
-			autoSlide = params.autoSlide;
-			autoSlideInterval = params.autoSlideInterval;
-			hoverPause = params.hoverPause;
-			slideCallBack = params.slideCallBack;
+			var panel = null,
+				screen = $(obj),
+				targetClass = params.targetClass,
+				animateType = params.animateType,
+				originalSize = params.originalSize,
+				imageUrl = params.imageUrl,
+				slideSpeed = params.slideSpeed,
+				easing = params.easing,
+				carousel = params.carousel,
+				autoSlide = params.autoSlide;
+				autoSlideInterval = params.autoSlideInterval,
+				hoverPause = params.hoverPause,
+				slideCallBack = params.slideCallBack,
+				openCallBack = params.openCallBack,
+				isFullScreen = params.isFullScreen,
+				showClip = params.showClip,
+				galabel = params.galabel;
 
-			var photos = [];
-
-			/* ギャラリーに設定する画像データ配列を生成する */
-			screen.find(targetClass).each(function(i) {
-
-				var target = $(this),
-					imagePath = target.attr('osrc') || '',
-					caption = target.attr('alt') || '';
-
-				var data = {
-					imagePath : imagePath,
-					caption : caption
-				};
-
-				// テンプレートに渡すため配列に格納
-				photos.push(data);
-
-			});
-
-			var maxPageNo = photos.length;
-
-			/* ギャラリーHTML（上部） */
-			var upper = '<div id="zoomPhotoPanel" class="window photo_enlarge display-none">'
-					+	'<div class="inner">'
-					+	'<div class="js-photoSlider carousel">'
-					+	'<p class="button back js-backBtn"><a href="#">'
-					+	'<% if (1 < maxPageNo) { %>'
-					+	'<img src="'+imageUrl+'/btn_carousel_back_l.png" alt="前へ" width="50" height="50" class="imgover" />'
-					+	'<% } %>'
-					+	'</a></p>'
-					+	'<p class="counter" style="width: 696px;padding-left: 71px;"><em><%= maxPageNo %></em>枚中 <em class="js-pageNo">0</em>枚目を表示</p>'
-					+	'<div class="js-screen" style="overflow: hidden;width: 696px;margin: 0 auto;">'
-					+	'<ul class="photos">';
-
-			/* ギャラリーHTML（画像） */
-			var list = '<% _.each(photos, function(data, i) { %> '
-					+	'<li class="imagePath<%=i+1%>">'
-					+	'<div class="js-photo">'
-					+	'<img src="<%= data.imagePath %>" alt="<%= data.caption %>" height="522" class="image imagePath" />'
-					+	'<div class="caption">'
-					+	'<%= data.caption %>'
-					+	'</div>'
-					+	'</div></li>'
-					+	'<% }); %>';
-
-			/* ギャラリーHTML（下部） */
-			var bottom = '</ul>'
-					+	'</div>'
-					+	'<p class="button next js-nextBtn"><a href="#">'
-					+	'<% if (1 < maxPageNo) { %>'
-					+	'<img src="'+imageUrl+'/btn_carousel_next_l.png" alt="次へ" width="50" height="50" class="imgover" />'
-					+	'<% } %>'
-					+	'</a></p></div>'
-					+	'</div>'
-					+	'<p class="button layerclose"><a href="#">'
-					+	'<img src="'+imageUrl+'/btn_full-screen_close.png" alt="閉じる" width="26" height="26" class="imgover" /></a></p>'
-					+	'</div>';
-
-
-			// 拡大写真パネルを生成する
-			panel = $(_.template(upper, {maxPageNo: maxPageNo}) + _.template(list, {photos: photos}) + _.template(bottom, {maxPageNo: maxPageNo}));
+			var mynavigallery = $('.' + className);
 			
-			$('body').append(panel);
+			var index = 1;
+			if (mynavigallery) {
+				index = mynavigallery.length + 1;
+			}
+
+			var slider = null;
+				
+			var make = function (index) {
+
+				var photos = [];
+
+				/* ギャラリーに設定する画像データ配列を生成する */
+				screen.find(targetClass).each(function(i) {
+
+					var target = $(this),
+						image = target.find('img'),
+						imageId = target.data('imageid') || '',
+						imagePath = image.attr('osrc') || image.attr('src') || '',
+						caption = image.attr('alt') || '';
+
+					var data = {
+						imageId : imageId,
+						imagePath : imagePath,
+						caption : caption
+					};
+
+					// テンプレートに渡すため配列に格納
+					photos.push(data);
+
+				});
+
+				var maxPageNo = photos.length;
+
+				/* デザインテンプレート */
+				var template = '';
+				if (isFullScreen) {
+					template = [
+									'<div class="photo_enlargeArea portfolio display-none" style="position:absolute;background-color:transparent;">',
+										'<div class="js-photoSlider">',
+											'<div class="parentKey photo_enlarge_imageArea">',
+											'<% _.each(photos, function(data, i) { %> ',
+												'<div class="childKey" style="text-align: center;">',
+														'<img src="<%=data.imagePath%>" itemprop="image" alt="<%=data.caption%>" data-imageid="<%=data.imageId%>" width="100%">',
+												'</div>',
+											'<% }); %>',
+											'</div>',
+										'</div>',
+										'<div class="photo_enlarge_partsArea transitionArea" style="">',
+											'<ul class="transitionList clearfix" style="position: fixed;">',
+												'<li class="item prev js-backBtn"><a href="#" class="trigger"></a></li>',
+												'<li class="item next js-nextBtn"><a href="#" class="trigger"></a></li>',
+											'</ul>',
+											'<div class="closeArea">',
+												'<p class="closeBtn" style="position: fixed;"><a href="#" class="layerclose"><img src="' + imageUrl + '/btn_delete.png" alt="削除" width="20" height="20"></a></p>',
+											'</div>',
+											'<div class="commentArea" style="position: fixed;">',
+												'<p class="comment"><span></span><a href="#" class="btnClip display-none">この画像を<br>クリップする</a></p>',
+												'<p class="count"></p>',
+											'</div>',
+										'</div>',
+									'</div>'].join('');
+				} else {
+					template = [
+									'<div class="window display-none">',
+										'<p class="layerclose" style="position:absolute;top:-5px;right:-2px;z-index:9999;"><a href="#"><img src="' + imageUrl + '/btn_delete.png" alt="閉じる" width="20" height="20"></a></p>',
+										'<div class="detailTtl">',
+											'<div class="photoSlide js-photoSlider" >',
+												'<div class="photoSlideViewId" style="overflow:hidden;margin 0 auto;">',
+													'<div class="parentKey use-gpu" style="padding-left: 10px; position: relative;">',
+														'<% _.each(photos, function(data, i) { %> ',
+															'<div class="childKey imagePath<%=(i+1)%>" style="float: left; margin: 0;">',
+																'<p class="photo">',
+																	'<img src="<%=data.imagePath%>" alt="<%=data.caption%>" width="289px" class="image imagePath" />',
+																'</p>',
+															'</div>',
+														'<% }); %>',
+													'</div>',
+												'</div>',
+												'<p class="btnSlideBack js-backBtn"><a href="#"><img src="' + imageUrl + '/btn_slide_back.png' + '" width="20" alt="back"></a></p>',
+												'<p class="btnSlideNext js-nextBtn"><a href="#"><img src="' + imageUrl + '/btn_slide_next.png' + '" width="20" alt="next"></a></p>',
+												'<ul class="slideControl">',
+													'<% _.each(photos, function(data, i) { %> ',
+														'<li class="active pageNo<%=(i+1)%>"><span>・</span></li>',
+													'<% }); %>',
+												'</ul>',
+											'</div>',
+										'</div>',
+									'</div>'].join('');
+				}
+
+
+				// 拡大写真パネルを生成する
+				panel = $(_.template(template, {maxPageNo: maxPageNo, photos: photos}));
+
+				panel.attr('id', 'zoomPhotoPanel'+ index); 
+				panel.addClass(className);
+				
+				$('.page').append(panel);
+			}
 
 			// イベントバンドル
-			bindEvent();
+			var bundle = function(index) {
 
-		};
+				var sliderAnimateType = '';
+				if (animateType === ANIMATE_TYPE.NO) {
+					sliderAnimateType = $.fn.mynavislider.ANIMATE_TYPE.NO;
+				} else if (animateType === ANIMATE_TYPE.FADE) {
+					sliderAnimateType = $.fn.mynavislider.ANIMATE_TYPE.FADE;
+				} else if (animateType === ANIMATE_TYPE.SLIDE) {
+					sliderAnimateType = $.fn.mynavislider.ANIMATE_TYPE.SLIDE;
+				} else if (animateType === ANIMATE_TYPE.ORIGINAL) {
+					sliderAnimateType = $.fn.mynavislider.ANIMATE_TYPE.FADE;
+				}
 
-		// イベントバンドル
-		var bindEvent = function() {
+				if (isFullScreen) {
 
-			// 画像スライダーを設定する
-			var slider = panel.find('.js-photoSlider').mynavislider({
-				'shift': 1
-				, 'backBtnKey': panel.find('.js-backBtn')
-				, 'nextBtnKey': panel.find('.js-nextBtn')
-				, 'animateType': animateType
-				, 'slideSpeed': slideSpeed
-				, 'easing': easing
-				, 'carousel': carousel
-				, 'autoSlide': autoSlide
-				, 'autoSlideInterval': autoSlideInterval
-				, 'hoverPause': hoverPause
-				, 'slideCallBack': function(data) {
-
-						panel.find('.js-pageNo').empty().append(data.pageNo);
-
-						var photo = data.obj.find('img.imagePath');
-
-						var img = new Image();
-						img.src = photo.attr('src');
-
-						// 表示する画像の幅を算出する。
-						var width = Math.ceil(522 * img.width / img.height);
-						if (696 < width) {
-							width = 696;
-						}
-
-						panel.find('.js-screen,js-photo').css('width', width);
-
-						if (slideCallBack) {
-							slideCallBack(data);
-						}
-
+					if (showClip) {
+						panel.find('.btnClip').bind('click', function(event) {
+							event.preventDefault();
+							event.stopPropagation();
+							// クリップ画像
+							$.mynaviClipImage($(this).data('imageid'), galabel);
+						}).show();
 					}
-			});
 
-			// 対象画像クリック時に拡大写真パネルを表示する
-			screen.find(targetClass).each(function(i) {
-				var target = $(this),
-					pageNo = i+1;
+					// 画像スライダーを設定する
+					slider = panel.find('.js-photoSlider').mynavislider({
+						'parentKey': '.parentKey'
+						, 'childKey': '.childKey'
+						, 'shift': 1
+						,'isMouseDrag': true
+						,'isFullScreen': true
+						, 'backBtnKey': panel.find('.js-backBtn')
+						, 'nextBtnKey': panel.find('.js-nextBtn')
+						, 'animateType': sliderAnimateType
+						, 'slideSpeed': slideSpeed
+						, 'easing': easing
+						, 'carousel': carousel
+						, 'autoSlide': autoSlide
+						, 'autoSlideInterval': autoSlideInterval
+						, 'hoverPause': hoverPause
+						, 'slideCallBack': function(data) {
+							
+							var targetImage = data.obj.find('img');
 
-				target.click(function(e) {
-					e.preventDefault();
-					slider.changePage(pageNo);
-					$.mLightBox({'mLightBoxId': '#zoomPhotoPanel', duration: 300});
+							panel.find('.commentArea .comment>span').text(targetImage.attr('alt') || '');
+							panel.find('.commentArea .count').text(data.pageNo + '枚目／' + data.maxPageNo + '枚中');
+							panel.find('.btnClip')
+								.data('imageid', targetImage.data('imageid'));
+							
+							if (slideCallBack) {
+								slideCallBack(data);
+							}
+						}, 'resizeCallBack': imagePosition
+					});
+
+					function imagePosition() {
+						var photos = slider.find('.childKey img');
+
+						var replacePhotoArea = function(img, photo) {
+
+							var x = Math.floor(img[0].height * $(window).width() / img[0].width);
+							var margin = Math.floor(($(window).height() - x) / 2);
+							if (0 < margin) {
+								photo.closest('.childKey').css('margin-top', margin + 'px');
+							} else {
+								photo.closest('.childKey').css('margin-top', '0px');
+							}
+
+						}
+				
+						photos.each(function() {
+							var photo = $(this);
+							
+							var loadImage = new (function() {
+								// オリジナル画像に変換する。
+								var imagePath = photo.attr('src');
+								if (0 <= imagePath.indexOf('_')) {
+									imagePath = imagePath.split("_")[0] + '.jpg';
+								}
+								photo.attr('src', imagePath);
+								
+								var img = $('<img>');
+								img
+									.load(function() {
+										replacePhotoArea(img, photo);
+									});
+								this.exec = function() {
+									img.attr('src', imagePath);
+								}
+							})();
+							
+							loadImage.exec();
+								
+						});
+						
+					}
+					imagePosition();
+					
+				} else {
+					// 画像スライダーを設定する
+					slider = panel.find('.js-photoSlider').mynavislider({
+						'parentKey': '.parentKey'
+						, 'childKey': '.childKey'
+						, 'shift': 1
+						, 'shiftw': 290
+						, 'backBtnKey': panel.find('.js-backBtn')
+						, 'nextBtnKey': panel.find('.js-nextBtn')
+						, 'animateType': sliderAnimateType
+						, 'slideSpeed': slideSpeed
+						, 'easing': easing
+						, 'carousel': carousel
+						, 'autoSlide': autoSlide
+						, 'autoSlideInterval': autoSlideInterval
+						, 'hoverPause': hoverPause
+						, 'slideCallBack': function(data) {
+
+							slider.find('.slideControl li').removeClass('active');
+							slider.find('.slideControl .pageNo'+data.pageNo).addClass('active');
+
+							var photo = data.obj.find('img.imagePath');
+
+							var replacePhotoArea = function() {
+
+								if (animateType === ANIMATE_TYPE.ORIGINAL) {
+									// 表示する画像の幅を算出する。
+									var height = Math.ceil(280 * img.height / img.width);
+									photo.css('max-height', height);
+									panel.find('.photoSlideViewId').css('height', height + 20);
+									
+									$.mLightBox.changeLayer();
+								}
+
+								if (slideCallBack) {
+									slideCallBack(data);
+								}
+							};
+
+							var img = new Image();
+							img.src = photo.attr('src');
+							if (0 < img.width) {
+								replacePhotoArea();
+							} else {
+								img.load = function() {
+									replacePhotoArea();
+								};
+							}
+
+							}
+					});
+				}
+
+
+				// 対象画像クリック時に拡大写真パネルを表示する
+				screen.find(targetClass).each(function(i) {
+					var target = $(this),
+						pageNo = i+1;
+
+					target.unbind('click');
+					target.bind('click', function(e) {
+						e.preventDefault();
+						showPage(pageNo);
+					});
 				});
-			});
 
-			panel.find('.layerclose').click(function(e) {
-				e.preventDefault();
-				$.mLightBox.close();
-			});
+				panel.find('.layerclose').click(function(e) {
+					e.preventDefault();
+					$.mLightBox.close();
+					// フッタを戻す。
+					Mynavi.showFooterNavBar();
+				});
+			};
+
+			// 指定したページを表示します。
+			var showPage = obj.showPage = function(pageNo) {
+				var pageNo = pageNo || 1;
+				slider.changePage(pageNo);
+				$.mLightBox({'mLightBoxId': '#zoomPhotoPanel' + index, duration: 300,
+					opacity: 1,
+					callback: function() {
+						var page = $('.page');
+
+						// フッタを一旦消す
+						page.find('.footerNavBar').hide();
+						
+						if (openCallBack) {
+							openCallBack();
+						}
+					},
+					closecallback: function() {
+						// フッタを戻す。
+						Mynavi.showFooterNavBar();
+					}
+				});
+			};
+
+			make(index);
+			
+			bundle(index);
+
 		};
 
 		// 処理開始
@@ -5571,14 +6007,15 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 	var ANIMATE_TYPE = $.fn.zoomPhotoPanel.ANIMATE_TYPE = {
 		NO: 0,
 		SLIDE: 1,
-		FADE: 2
+		FADE: 2,
+		ORIGINAL: 3
 	};
 
 	// デフォルト値
 	$.fn.zoomPhotoPanel.defaults = {
 		'targetClass': '.js-zoomPhoto' // 拡大する画像要素
 		, 'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類
-		, 'imageUrl': '/img' // 画像パス
+		, 'imageUrl': '/sp/img' // 画像パス
 		, 'slideSpeed': 300 // スライド速度
 		, 'easing': 'easeInOutCirc' // スライドアニメーションの種類
 		, 'carousel': false // ローテートさせるかどうか
@@ -5586,6 +6023,10 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 		, 'autoSlideInterval':  5000 // 自動スライドさせる間隔(ミリ秒)
 		, 'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
 		, 'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
+		, 'openCallBack': null // 拡大表示後のコールバック
+		,'isFullScreen': false // フルスクリーンで表示する
+		, 'showClip': false // 画像クリップ機能を表示する
+		, 'galabel': '' // 画像クリップ時のGAイベントラベル値
 	};
 
 })(jQuery);
