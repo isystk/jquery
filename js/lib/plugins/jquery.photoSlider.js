@@ -50,6 +50,7 @@
 			,	hoverPause = null
 			,	isMouseDrag = null
 			,	reboundw = null
+			,	moment = false
 			,	isFullScreen = false
 			,	heightMaxScreen = false
 			,	isSlideCallBack = null;
@@ -71,6 +72,7 @@
 			hoverPause = params.hoverPause;
 			isMouseDrag = params.isMouseDrag;
 			reboundw = params.reboundw;
+			moment = params.moment;
 			slideSpeed = params.slideSpeed;
 			shift = params.shift;
 			margin = params.margin;
@@ -321,7 +323,7 @@
 		// カルーセル
 		var doCarousel = function() {
 			// 左端
-			if (pos === 0) {
+			if (pos <= 0) {
 				pos = (li.size()/2);
 				ul.css('left', '-' + (liwidth*pos) + 'px');
 			// 右端
@@ -350,6 +352,8 @@
 		// スワイプでのページングを可能にする
 		var bindMouseDragEvent = function() {
 			var isTouch = ('ontouchstart' in window);
+
+			var momentObject = (moment) ? new MomentObject(ul[0]) : null;
 			ul.bind({
 				// タッチの開始、マウスボタンを押したとき
 				'touchstart mousedown': function(e) {
@@ -372,9 +376,20 @@
 					if(isNaN(this.left)) {
 						this.left = $(this).position().left;
 					}
+					this.top = parseInt($(this).css('top'));
+					if(isNaN(this.top)) {
+						this.top = $(this).position().top;
+					}
 					this.startLeft = this.left;
-
+					
 					this.touched = true;
+
+					// 慣性を利用してスワイプする。
+					if (moment) {
+						momentObject._position = momentObject.positionize();
+						momentObject.dragStart(event);
+					}
+
 				},
 				// タッチしながら移動、マウスのドラッグ
 				'touchmove mousemove': function(e) {
@@ -408,7 +423,12 @@
 
 					// 移動先の位置を取得する
 					this.left = this.left - x;
-					
+
+					// 慣性を利用する場合は、移動速度を計算する
+					if (moment) {
+						momentObject.dragMove(event);
+					}
+
 					// 画像を移動させる
 					$(this).css({left:this.left});
 
@@ -423,19 +443,84 @@
 					}
 					this.touched = false;
 
-					// スワイプの移動量
-					dragw = this.startLeft - this.left;
+					var self = this;
+					
+					// 残りの移動処理
+					var restMove = function (movew) {
 
-					// スワイプした場合は、その他のイベントを停止する。
-					if (dragw !== 0) {
-						event.stopImmediatePropagation();
+						// スワイプ中（touchmove mousemove）で移動したページ量
+						var movePage = Math.floor(Math.abs(movew)/shiftw);
+						if (movePage != 0) {
+							if (movew < 0) {
+								movePage = movePage * -1;
+							}
+							// ページ番号
+							pageNo = pageNo + movePage;
+							if (pageNo < 1) {
+								pageNo = pageNo + maxPageNo;
+							} else if (maxPageNo < pageNo) {
+								pageNo = pageNo - maxPageNo;
+							}
+							pos = pos + (shift * movePage);
+							if (carousel) {
+								// 左端
+								if (pos <= 0) {
+									pos = (li.size()/2);
+									ul.css('left', '-' + (liwidth*pos) + 'px');
+									pageNo = 1;
+									slide(pageNo, ANIMATE_TYPE.NO);
+									return;
+								// 右端
+								} else if ((li.size()-shift - (dispCount - shift)) <= pos) {
+									var range = pos - (li.size()-shift - (dispCount - shift));
+									pos = (li.size()/2)-shift - (dispCount - shift) + range;
+									ul.css('left', '-' + (liwidth*pos) + 'px');
+									pageNo = maxPageNo;
+									slide(pageNo, ANIMATE_TYPE.NO);
+									return;
+								}
+							}
+						}
+
+						var restw = Math.abs(movew) % shiftw;
+						if (movew < 0) {
+							// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+							if ((restw < reboundw) || (!carousel && ((pageNo <= 1 && movew < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+								var from = self.startLeft - movew;
+								var to = self.startLeft - (shiftw * movePage);
+								rebound(from, to);
+							} else {
+								var p = pageNo - 1;
+								if (!carousel && p <= 1) {
+									p = 1;
+								}
+								// 前ページ
+								dragw = movew - (shiftw * movePage);
+								slide(p, ANIMATE_TYPE.SLIDE);
+							}
+						} else if (0 < movew) {
+							// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
+							if ((restw < reboundw) || (!carousel && ((pageNo <= 1 && movew < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
+								var from = self.startLeft - movew;
+								var to = self.startLeft - (shiftw * movePage);
+								rebound(from, to);
+							} else {
+								var p = pageNo + 1;
+								if (!carousel && maxPageNo <= p) {
+									p = maxPageNo;
+								}
+								// 次ページ
+								dragw = movew - (shiftw * movePage);
+								slide(p, ANIMATE_TYPE.SLIDE);
+							}
+						} else {
+							// 何もしない
+							nowLoading = false;
+						}
 					}
 
 					// リバウンド処理
-					var rebound = function(self) {
-						var from = self.startLeft - dragw;
-						var to = self.startLeft;
-						
+					var rebound = function(from, to) {
 						var elem = ul[0];
 						var begin = +new Date();
 						var duration = slideSpeed;
@@ -450,8 +535,7 @@
 								_now = to;
 								elem.style.left = _now + 'px';
 
-								nowLoading = false;
-								dragw = 0;
+								slide(pageNo, ANIMATE_TYPE.NO);
 							}
 							else {
 								_pos = easing(time, duration);
@@ -459,37 +543,20 @@
 							}
 							elem.style.left = _now + 'px';
 						}, 10);
-
 					}
 
-					if (dragw < 0) {
-						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
-						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
-							rebound(this);
-						} else {
-							var p = pageNo - Math.ceil(Math.abs(dragw)/shiftw);
-							if (!carousel && p <= 1) {
-								p = 1;
-							}
-							// 前ページ
-							slide(p, ANIMATE_TYPE.SLIDE);
-						}
-					} else if (0 < dragw) {
-						// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
-						if ((Math.abs(dragw) < reboundw) || (!carousel && ((pageNo <= 1 && dragw < 0) || (maxPageNo <= pageNo && 0 < dragw)))) {
-							rebound(this);
-						} else {
-							var p = pageNo + Math.ceil(Math.abs(dragw)/shiftw);
-							if (!carousel && maxPageNo <= p) {
-								p = maxPageNo;
-							}
-							// 次ページ
-							slide(p, ANIMATE_TYPE.SLIDE);
-						}
+					if (moment) {
+						momentObject.dragEnd(event);
+						momentObject.onstop = function (obj) {
+					    	// 慣性で動いた分を加算する
+							var movew = self.startLeft - self.left + obj.momentw;
+							restMove(movew);
+					    }
 					} else {
-						// 何もしない
-						nowLoading = false;
+						var movew = self.startLeft - self.left;
+						restMove(movew);
 					}
+				    
 				}
 			});
 		};
@@ -646,6 +713,200 @@
 				slideCallBackFunc(data);
 			}
 		};
+		
+
+		// 慣性を利用してスライドする
+		var MomentObject = function (element) {
+			this.element = element;
+			this._position = this.positionize();
+			this.reset();
+		}
+		MomentObject.prototype = {
+			constructor: MomentObject,
+			damping : 15,
+			_isDragging: false,
+			__position : Vector2.zero,
+			_velocity : Vector2.zero,
+			_prevTime : 0,
+			_prevPosition: Vector2.zero,
+			_prevVelocity: Vector2.zero,
+			_loopTimer: null,
+
+			positionize: function () {
+				var rect = this.element.getBoundingClientRect();
+				var x = rect.left;
+				var y = rect.top;
+				return new Vector2(x, y);
+			},
+
+			positionizeByEvent: function (e) {
+				var isTouch = ('ontouchstart' in window);
+				var x = (isTouch && event.changedTouches) ? event.changedTouches[0].pageX : e.pageX;
+				var y = (isTouch && event.changedTouches) ? event.changedTouches[0].pageY : e.pageY;
+				return new Vector2(x, y);
+			},
+			dragStart: function (evt) {
+				this.reset();
+				this._prevTime	 = Date.now();
+				this._prevPosition = this.positionizeByEvent(evt);
+				this._isDragging   = true;
+			},
+			dragMove: function (evt) {
+				if (!this._isDragging) {
+					return;
+				}
+
+				var now = Date.now();
+				var deltaTime = now - this._prevTime;
+				var eventPos = this.positionizeByEvent(evt);
+				var deltaPosition = Vector2.sub(eventPos, this._prevPosition);
+				var velocity = Vector2.divisionScalar(deltaPosition, (deltaTime || (deltaTime = 1)));
+				var deltaVelocity = Vector2.sub(velocity, this._prevVelocity);
+
+				this._velocity.add(deltaVelocity);
+				this._position = Vector2.add(this._position, deltaPosition);
+
+				this._prevTime = now;
+				this._prevPosition = eventPos;
+				this._prevVelocity = velocity;
+			},
+			dragEnd: function (evt) {
+				this._isDragging = false;
+				this.dragRelease();
+			},
+			dragRelease: function () {
+				var _this = this;
+				var zero = Vector2.zero;
+				var past = Date.now();
+				
+				var startLeft = _this._position.x;
+				
+				(function loop() {
+					_this.dampingVelocity();
+					var now   = Date.now();
+					var delta = now - past;
+					_this._position = Vector2.add(_this._position, Vector2.multiplyScalar(_this._velocity, delta));
+					
+					// 画像を移動させる
+					$(_this.element).css({left:_this._position.x});
+
+					var isFirst = false;
+					if (0 <= _this._position.x) {
+						isFirst = true;
+					}
+					var isLast = false;
+					if (_this._position.x <= (-1 * (maxPageNo * (carousel ? 2 : 1) * shiftw) + shiftw)) {
+						isLast = true;
+					}
+					// 先頭に到達、最後に到達、慣性での動作が停止 の何れかの場合
+					if (isFirst || isLast || _this._velocity.equal(zero)) {
+						_this.reset();
+
+						// 慣性の移動量
+						var obj = {
+								momentw : startLeft - _this._position.x
+						};
+						
+						_this.stop(obj);
+						return;
+					}
+
+					past = now;
+					_this._loopTimer = setTimeout(loop, 16);
+				}());
+			},
+			dampingVelocity: function () {
+				var damping = Vector2.divisionScalar(this._velocity, this.damping);
+				this._velocity.sub(damping);
+				if (this._velocity.lessThen(0.05)) {
+					this._velocity = Vector2.zero;
+				}
+			},
+			reset: function () {
+				clearTimeout(this._loopTimer);
+				this._velocity = Vector2.zero;
+				this._prevVelocity = Vector2.zero;
+				this._prevPosition = Vector2.zero;
+			},
+			
+			stop: function (obj) {
+				this.onstop && this.onstop(obj);
+			}
+		};
+
+		/**
+		 * Vector2
+		 *
+		 * @param {number} x
+		 * @param {number} y
+		 */
+		function Vector2(x, y) {
+			this.x = x;
+			this.y = y;
+		}
+		Object.defineProperties(Vector2, {
+			'zero': {
+				enumerable: true,
+				set: function (val) {},
+				get: function () { return new Vector2(0, 0); }
+			}
+		});
+		Vector2.prototype = {
+			constructor: Vector2,
+
+			add: function (vec) {
+				this.x += vec.x;
+				this.y += vec.y;
+				return this;
+			},
+			sub: function (vec) {
+				this.x -= vec.x;
+				this.y -= vec.y;
+				return this;
+			},
+			multiplyScalar: function (val) {
+				this.x *= val;
+				this.y *= val;
+				return this;
+			},
+			divisionScalar: function (val) {
+				this.x /= val;
+				this.y /= val;
+				return this;
+			},
+			length: function () {
+				return Math.sqrt((this.x * this.x) + (this.y * this.y));
+			},
+			lessThen: function (val) {
+				return (this.length() <= val);
+			},
+			equal: function (vec) {
+				return (this.x === vec.x && this.y === vec.y);
+			},
+			copy: function () {
+				return new Vector2(this.x, this.y);
+			}
+		};
+		Vector2.add = function (vec1, vec2) {
+			var x = vec1.x + vec2.x;
+			var y = vec1.y + vec2.y;
+			return new Vector2(x, y);
+		};
+		Vector2.sub = function (vec1, vec2) {
+			var x = vec1.x - vec2.x;
+			var y = vec1.y - vec2.y;
+			return new Vector2(x, y);
+		};
+		Vector2.multiplyScalar = function (vec, val) {
+			var x = vec.x * val;
+			var y = vec.y * val;
+			return new Vector2(x, y);
+		};
+		Vector2.divisionScalar = function (vec, val) {
+			var x = vec.x / val;
+			var y = vec.y / val;
+			return new Vector2(x, y);
+		};
 
 		/* Public  */
 
@@ -726,6 +987,7 @@
 		,	'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
 		,	'isMouseDrag': false // スワイプでのページングを可能にするかどうか
 		,	'reboundw': 50 // スワイプ時に跳ね返りを行う幅
+		,	'moment': false // スワイプ時に慣性を利用するかどうか
 		,	'isFullScreen': false // 端末の画面横幅いっぱいに画像を表示する
 		,	'heightMaxScreen': false // 画像縦幅が端末縦幅よりも大きい場合は端末縦幅いっぱいに表示する（isFullScreen がtrueの場合のみ有効）
 		,	'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
@@ -733,5 +995,4 @@
 	};
 
 })(jQuery);
-
 
