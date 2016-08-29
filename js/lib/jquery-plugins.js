@@ -2752,24 +2752,26 @@ Dialog.prototype = {
 
 (function($) {
 	/*
-	 * mynavislider *
+	 * mynavislider
 	 * Copyright (c) 2013 iseyoshitaka
 	 *
 	 * Description:
 	 *  画像スライダー
 	 *
 	 * Sample:
-	 * var slide1 = $('#slide1 .screen').mynavislider({
-	 * 	'carousel': false,
-	 * 	'backBtnKey': '#slide1 #gallery-back',
-	 * 	'nextBtnKey': '#slide1 #gallery-next',
+	 * var slider1 = $('.js-mynavislider').mynavislider({
+	 * 	'parentKey': 'ul',
+	 * 	'childKey': 'li',
+	 * 	'carousel': true,
+	 * 	'backBtnKey': '.back',
+	 * 	'nextBtnKey': '.next',
 	 * 	'slideCallBack': function(data) {
-	 * 		$('#slide1 .pageNo').text(data.pageNo + '/' + data.maxPageNo);
+	 * 		slider1.find('.pageNo').text(data.pageNo + '/' + data.maxPageNo);
 	 * 	}
 	 * });
-	 * $('#slide1 .changePage').click(function(e) {
+	 * slider1.find('.changePage').click(function(e) {
 	 * 	e.preventDefault();
-	 * 	slide1.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.SLIDE);
+	 * 	slider1.changePage($(this).data('pageno'), $.fn.mynavislider.ANIMATE_TYPE.SLIDE);
 	 * });
 	 * 
 	 */
@@ -2780,10 +2782,10 @@ Dialog.prototype = {
 			,	li = null // 子要素
 			,	back = null // 前ページボタン
 			,	next = null // 次ページボタン
-			,	pos = 0 // 画像のポジション
+			,	pos = 0 // 子要素のインデックス
 			,	pageNo = 1 // 現在のページ番号
 			,	maxPageNo = 1 // 最大のページ番号
-			,	liwidth = 0 // 子要素の横幅
+			,	liwidth = 0 // 子要素１つの横幅
 			,	nowLoading = false // 処理中かどうか
 			,	dragw = 0 // スワイプした横幅
 			,	childKey = null
@@ -2803,8 +2805,7 @@ Dialog.prototype = {
 			,	reboundw = null
 			,	moment = false
 			,	isFullScreen = false
-			,	heightMaxScreen = false
-			,	isSlideCallBack = null;
+			,	heightMaxScreen = false;
 
 		var params = $.extend({}, $.fn.mynavislider.defaults, options);
 
@@ -2858,33 +2859,50 @@ Dialog.prototype = {
 			} else {
 				exec();
 			}
-			
-		};
-		
-		var exec = function() {
-			if (isFullScreen) {
-				fullScreen();
-			} else if (params.shiftw) {
-				liwidth = Math.ceil(params.shiftw/shift);
-				shiftw = params.shiftw;
-			} else {
-				liwidth = li.width();
-				shiftw = liwidth * shift;
-			}
-			maxPageNo = Math.ceil(li.size()/shift);
 
-			// １ページの場合はスライド不要の為、カルーセルは強制OFFとする。
-			if (maxPageNo <= 1) {
-				carousel = false;
-				isMouseDrag = false;
+			function exec() {
+				if (isFullScreen) {
+					// スライド幅＝画面横幅いっぱい
+					fullScreen();
+				} else if (params.shiftw) {
+					// スライド幅＝指定した幅固定
+					liwidth = Math.ceil(params.shiftw/shift);
+					shiftw = params.shiftw;
+				} else {
+					// スライド幅＝子要素横幅✕１ページに表示する子要素の数
+					liwidth = li.width();
+					shiftw = liwidth * shift;
+				}
+				maxPageNo = Math.ceil(li.size()/shift);
+
+				// １ページの場合はスライド不要の為、カルーセルは強制OFFとする。
+				if (maxPageNo <= 1) {
+					carousel = false;
+					isMouseDrag = false;
+				}
+
+				// 各種イベントの設定
+				bindEvent();
+				
+				// スライダーを設定したよっていうマークを付ける。
+				screen.addClass('slider-set-end');
+			};
+		};
+
+		// 後処理
+		var after = function() {
+			if (carousel) {
+				doCarousel();
 			}
 
-			bindEvent();
+			nowLoading = false;
+			dragw = 0;
 			
-			// スライダーを設定したよっていうマークを付ける。
-			screen.addClass('slider-set-end');
+			// コールバック
+			slideCallBack();
 		};
-		
+
+		// 各種イベントの設定
 		var bindEvent = function() {
 
 			if (carousel) {
@@ -2908,10 +2926,10 @@ Dialog.prototype = {
 				bindMouseDragEvent();
 			}
 
-			// ページングを可能にする
+			// ボタンクリックでのページングを可能にする
 			bindPagingEvent();
 
-			// 自動のページングを可能にする。
+			// 自動でのページングを可能にする
 			if (isAutoSlide) {
 				autoSlide.init();
 			}
@@ -2919,34 +2937,19 @@ Dialog.prototype = {
 		}
 
 		// 指定したページに移動する
-		var slide = function(page, animateType) {
+		var slide = function(move, animateType) {
 
 			if (!animateType) {
 				animateType = ANIMATE_TYPE.NO;
 			}
 
-			// 後処理
-			var after = function() {
-				if (carousel) {
-					doCarousel();
-				}
-
-				nowLoading = false;
-				dragw = 0;
-				
-				// コールバック
-				slideCallBack();
-			};
-
-			// 移動するページ量
-			var move = page - pageNo;
-
+			// 子要素が１つの場合は処理しない
 			if (maxPageNo <= 1) {
 				after();
 				return;
 			}
 
-			// カルーセルがない場合で、次ページが存在しない場合は、処理させない
+			// カルーセルでない場合は、次ページが存在しないと処理しない
 			if (!carousel) {
 				if ((move < 0 && pageNo === 1) || (0 < move && pageNo === maxPageNo)) {
 					after();
@@ -2956,6 +2959,7 @@ Dialog.prototype = {
 
 			nowLoading = true;
 
+			// 現在のオフセット位置と移動後のオフセット位置を設定
 			var from = 0;
 			if (carousel) {
 				from = -1 * (pos/shift) * shiftw - dragw;
@@ -2964,15 +2968,15 @@ Dialog.prototype = {
 			}
 			var to = from - (shiftw * move) + dragw;
 
+			// 移動後の子要素のインデックスを設定
 			pos = pos + (shift * move);
 
-			// ページ番号
-			if (page < 1) {
-				pageNo = maxPageNo;
-			} else if (maxPageNo < page) {
-				pageNo = 1;
-			} else {
-				pageNo = page;
+			// ページ番号を設定
+			pageNo = pageNo + move;
+			if (pageNo < 1) {
+				pageNo = pageNo + maxPageNo;
+			} else if (maxPageNo < pageNo) {
+				pageNo = pageNo - maxPageNo;
 			}
 
 			// ページングボタンの表示制御
@@ -2981,7 +2985,7 @@ Dialog.prototype = {
 			}
 
 			if (animateType === ANIMATE_TYPE.NO) {
-				// アニメーションを利用しない
+				// アニメーションを利用せずに画像を切り替える。
 				if (1 < maxPageNo && carousel) {
 					ul.css('left', '-' + (pos * liwidth) + 'px');
 				} else {
@@ -2989,7 +2993,7 @@ Dialog.prototype = {
 				}
 				after();
 			} else if (animateType === ANIMATE_TYPE.SLIDE) {
-				// jQueryを利用しないアニメーション(Androidでアニメーションが重いため)
+				// スライドで画像を切り替える。（Androidで負荷が大きいため、jQueryのアニメーションは利用しない)
 				(function() {
 					var self = this;
 
@@ -3018,6 +3022,7 @@ Dialog.prototype = {
 					}, 10);
 				})();
 			} else if (animateType === ANIMATE_TYPE.FADE) {
+				// フェードで画像を切り替える。
 				ul.animate({'opacity': 0 }, 300, function() {
 					if (1 < maxPageNo && carousel) {
 						ul.css('left', '-' + (pos * liwidth) + 'px').animate({'opacity': 1}, 300);
@@ -3053,18 +3058,18 @@ Dialog.prototype = {
 		// カルーセル用に両端に番兵を作成する
 		var initCarousel = function() {
 
-			// 最終ページに空きが出来る場合は空のLIダグを追加する
+			// 最終ページに空きが出来る場合は空のLIダグを追加する。例）｜○○○｜○○○｜○○○｜○  ｜
 			var addSize = li.size()%shift;
 			if (addSize !== 0) {
 				for (var i=0, len=shift-addSize;i<len;i++) {
-					ul.append(ul.find(childKey).filter(':first').clone().empty().css('width', liwidth).css('height', li.height()));
+					ul.append(ul.find(childKey).filter(':first').clone(true).empty().css('width', liwidth).css('height', li.height()));
 				}
 				// liを再キャッシュ
 				li = ul.find(childKey);
 			}
 
 			ul
-				.append(li.clone().addClass('cloned'))
+				.append(li.clone(true).addClass('cloned'))
 				.css('left', '-' + (liwidth*(li.size())) + 'px');
 
 			// liを再キャッシュ
@@ -3085,7 +3090,7 @@ Dialog.prototype = {
 			}
 		};
 
-		// ページングを可能にする
+		// ボタンクリックでのページングを可能にする
 		var bindPagingEvent = function() {
 			// 左方向へスライドする
 			back.click(function(e) {
@@ -3103,7 +3108,7 @@ Dialog.prototype = {
 		// スワイプでのページングを可能にする
 		var bindMouseDragEvent = function() {
 			var isTouch = ('ontouchstart' in window);
-
+			// 慣性を利用するかどうか
 			var momentObject = (moment) ? new MomentObject(ul[0]) : null;
 			ul.bind({
 				// タッチの開始、マウスボタンを押したとき
@@ -3219,7 +3224,7 @@ Dialog.prototype = {
 									pos = (li.size()/2);
 									ul.css('left', '-' + (liwidth*pos) + 'px');
 									pageNo = 1;
-									slide(pageNo, ANIMATE_TYPE.NO);
+									slide(0, ANIMATE_TYPE.NO);
 									return;
 								// 右端
 								} else if ((li.size()-shift - (dispCount - shift)) <= pos) {
@@ -3227,7 +3232,7 @@ Dialog.prototype = {
 									pos = (li.size()/2)-shift - (dispCount - shift) + range;
 									ul.css('left', '-' + (liwidth*pos) + 'px');
 									pageNo = maxPageNo;
-									slide(pageNo, ANIMATE_TYPE.NO);
+									slide(0, ANIMATE_TYPE.NO);
 									return;
 								}
 							}
@@ -3247,7 +3252,9 @@ Dialog.prototype = {
 								}
 								// 前ページ
 								dragw = movew - (shiftw * movePage);
-								slide(p, ANIMATE_TYPE.SLIDE);
+								// 移動するページ量
+								var move = p - pageNo;
+								slide(move, ANIMATE_TYPE.SLIDE);
 							}
 						} else if (0 < movew) {
 							// 一定幅以上スワイプしていない場合は、跳ね返り処理を行う。
@@ -3262,7 +3269,9 @@ Dialog.prototype = {
 								}
 								// 次ページ
 								dragw = movew - (shiftw * movePage);
-								slide(p, ANIMATE_TYPE.SLIDE);
+								// 移動するページ量
+								var move = p - pageNo;
+								slide(move, ANIMATE_TYPE.SLIDE);
 							}
 						} else {
 							// 何もしない
@@ -3286,7 +3295,7 @@ Dialog.prototype = {
 								_now = to;
 								elem.style.left = _now + 'px';
 
-								slide(pageNo, ANIMATE_TYPE.NO);
+								slide(0, ANIMATE_TYPE.NO);
 							}
 							else {
 								_pos = easing(time, duration);
@@ -3297,12 +3306,12 @@ Dialog.prototype = {
 					}
 
 					if (moment) {
-						momentObject.dragEnd(event);
 						momentObject.onstop = function (obj) {
 					    	// 慣性で動いた分を加算する
 							var movew = self.startLeft - self.left + obj.momentw;
 							restMove(movew);
 					    }
+						momentObject.dragEnd(event);
 					} else {
 						var movew = self.startLeft - self.left;
 						restMove(movew);
@@ -3340,7 +3349,7 @@ Dialog.prototype = {
 				}
 				timer = setTimeout(function() {
 					clearInterval(timer);
-					slide(pageNo+1, animateType);
+					slide(1, animateType);
 					startTimer();
 				} , autoSlideInterval);
 			}
@@ -3585,12 +3594,7 @@ Dialog.prototype = {
 			}
 		};
 
-		/**
-		 * Vector2
-		 *
-		 * @param {number} x
-		 * @param {number} y
-		 */
+		// Vector2
 		function Vector2(x, y) {
 			this.x = x;
 			this.y = y;
@@ -3662,7 +3666,7 @@ Dialog.prototype = {
 		/* Public  */
 
 		// 前ページを表示します。
-		var backPage = this.backPage = function() {
+		var backPage = this.backPage = function(callback) {
 			if (nowLoading) {
 				return;
 			}
@@ -3670,11 +3674,14 @@ Dialog.prototype = {
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo-1, animateType);
+			slide(-1, animateType);
+			if (callback) {
+				callback();
+			}
 		}
 
 		// 次ページを表示します。
-		var nextPage = this.nextPage = function() {
+		var nextPage = this.nextPage = function(callback) {
 			if (nowLoading) {
 				return;
 			}
@@ -3682,7 +3689,10 @@ Dialog.prototype = {
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(pageNo+1, animateType);
+			slide(1, animateType);
+			if (callback) {
+				callback();
+			}
 		}
 
 		// 指定したページを表示します。
@@ -3695,14 +3705,36 @@ Dialog.prototype = {
 			if (autoSlide.on) {
 				autoSlide.restart();
 			}
-			slide(page, animateType);
+			// 移動するページ量
+			var move = page - pageNo;
+			if (Math.abs(page + (maxPageNo-pageNo)) < Math.abs(move)) {
+				move = page + (maxPageNo-pageNo);
+			}
+			slide(move, animateType);
 		}
 
-		// スライドコールバックで次ページ要素をAjax取得してLIに追加した場合などに、最大ページなどの情報をリフレッシュする。
-		var refresh = this.refresh = function () {
+		// 最大ページなどの情報をリフレッシュする。（スライドコールバックで次ページ要素をAjax取得してLIに追加した場合などはこれを利用してページ情報を最新化する）
+		// 引数：現在ページ、最大ページ、現在ページの左に追加した要素数
+		var refresh = this.refresh = function (page, _maxPageNo, leftAddCnt) {
+			// LIをリキャッシュ
 			li = ul.find(params.childKey);
-			maxPageNo = Math.ceil(li.size()/shift);
-			showArrows();
+			ul.width(ul.width()+(li.size() * liwidth) + 'px');
+			if (carousel) {
+				maxPageNo = parseInt(_maxPageNo) || Math.ceil(li.size()/2/shift);
+
+				pos = pos + leftAddCnt;
+				ul.css('left', '-' + (pos * liwidth) + 'px');
+
+				// リサイズ時は、コールバックは呼ばない。
+				var workSlideCallBackFunc = slideCallBackFunc;
+				slideCallBackFunc = null;
+				changePage(page);
+				slideCallBackFunc = workSlideCallBackFunc;
+
+			} else {
+				maxPageNo = parseInt(_maxPageNo) || Math.ceil(li.size()/shift);
+				showArrows();
+			}
 		};
 
 		// 処理開始
@@ -3724,25 +3756,25 @@ Dialog.prototype = {
 	$.fn.mynavislider.defaults = {
 			'parentKey': 'ul' // 親要素
 		,	'childKey': 'li' // 子要素
-		,	'shift': 5 // １ページでスライドさせる画像数
-		,	'margin': 0 // 子要素間のマージン
-		,	'dispCount': null // １ページに表示する子要素の件数(shiftで指定した値と１ページに表示する子要素の数が異なる場合にのみ指定する)
+		,	'shift': 5 // １ページでスライドさせる子要素の数
+		,	'dispCount': null // １ページに表示する子要素の数(shiftで指定した値と異なる場合にのみ指定する。例：１ページ５要素表示するがスライドは１要素づつ移動する場合など)
 		,	'shiftw': null // １ページでにスライドさせる幅(子要素にmarginなどの余白が指定されている場合に、自動で幅が算出できないためこれを指定する。)
-		,	'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類
+		,	'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類（なし、スライド、フェード）
 		,	'slideSpeed': 300 // スライド速度
-		,	'carousel': false // ローテートさせるかどうか
-		,	'backBtnKey': '#gallery-back' // 次ページボタン
-		,	'nextBtnKey': '#gallery-next' // 前ページボタン
-		,	'autoSlide': false // 自動スライドさせるどうか
-		,	'autoSlideInterval':  5000 // 自動スライドさせる間隔(ミリ秒)
-		,	'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
+		,	'carousel': false // １ページ目または、最終ページに到達した場合に、ローテートさせるかどうか
+		,	'backBtnKey': '#gallery-back' // 次ページボタンのセレクタ
+		,	'nextBtnKey': '#gallery-next' // 前ページボタンのセレクタ
+		,	'autoSlide': false // 自動でスライドさせるどうか
+		,	'autoSlideInterval':  5000 // 自動でスライドさせる間隔(ミリ秒)
+		,	'hoverPause':  false // 子要素上にマウスオーバーすると自動スライドを一時停止する。
 		,	'isMouseDrag': false // スワイプでのページングを可能にするかどうか
 		,	'reboundw': 50 // スワイプ時に跳ね返りを行う幅
 		,	'moment': false // スワイプ時に慣性を利用するかどうか
-		,	'isFullScreen': false // 端末の画面横幅いっぱいに画像を表示する
-		,	'heightMaxScreen': false // 画像縦幅が端末縦幅よりも大きい場合は端末縦幅いっぱいに表示する（isFullScreen がtrueの場合のみ有効）
-		,	'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
-		,	'resizeCallBack': null // 画面リサイズ後に処理を行うコールバック
+		,	'isFullScreen': false // 画面横幅いっぱいに画像を表示するかどうか
+		,	'margin': 0 // 子要素間のマージン(isFullScreenで画面横幅いっぱいに表示した場合で子要素間にマージンが設定されている場合に利用する)
+		,	'heightMaxScreen': false // 画像縦幅が画面縦幅よりも大きい場合は画面縦幅いっぱいに表示する（拡大写真パネルにて利用。isFullScreen がtrueの場合のみ有効）
+		,	'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はこれを利用してカスタマイズする)
+		,	'resizeCallBack': null // 画面リサイズ（または回転）後に処理を行うコールバック
 	};
 
 })(jQuery);
