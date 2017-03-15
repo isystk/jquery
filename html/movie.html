@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+$(function() {
+	// 初期テロップデータ
+	var telop = [
+		{ 'id':'t1', 'sec': 0.5, 'text':'木曽川 特集' },
+		{ 'id':'t2', 'sec': 3, 'text':'木曽川は伊勢湾に流れ込んでいます' },
+		{ 'id':'t3', 'sec': 6, 'text':'映像は長野県南木曽町で撮影したものです' },
+		{ 'id':'t4', 'sec': 9, 'text':'川の色は薄緑色で大変綺麗です' }
+	];
+
+	var telopData = [], tID = [], timerID;
+	var telopY = startY = 20; // テロップの表示Y座標
+	var telopRight = 400; // テロップが登場する右端の座標
+	var telopOffset  = 30;  // テロップの表示位置のオフセット
+	var telopBottom = 200;  // テロップの下限の座標
+	var currentTime = 0;  // 動画の再生時間
+	var myVideo = document.getElementById("myVideo");
+
+	// テロップデータを読み込む
+	telopData = telop;
+
+	// テキストエリア内のデータが更新されたらテロップデータを反映する
+	$(document).on("keypress", "#telopCommand", function(e) {
+		var self = $(this);
+		if (e.keyCode == 13) {
+			var data = {};
+			data.id = 't'+ telopData.length;
+			data.sec = myVideo.currentTime;
+			data.text = self.val();
+			telopData.push(data);
+			$("#telopCommand").val("");
+		}
+	});
+
+	// テロップの移動を行い、新たなテロップを追加する
+	function moveTelop(){
+		// テロップを移動させる処理
+		for(var i=0; i<tID.length; i++){
+			var x = parseInt(document.getElementById(tID[i]).style.left);
+			if (x > -1000){
+				document.getElementById(tID[i]).style.left = (x - 20) + "px";
+			}
+		}
+
+		// テロップを新たに追加するかどうか調べる
+		for(var i=0; i<telopData.length; i++){
+			if (checkTelop(telopData[i].id) == true) continue;  // すでにテロップが表示されている場合はループの先頭へ
+			if (myVideo.currentTime >= telopData[i].sec){
+				var ele = document.createElement("div");	// テロップを表示するdivを生成
+				ele.innerHTML = telopData[i].text;  // 表示する文字を設定
+				ele.className = "message";  // テロップのスタイルシートを設定
+				ele.style.left = telopRight+"px";
+				ele.style.top = telopY+"px";
+				ele.style.position = "absolute";
+				ele.style.color = "#fff";
+				ele.style.fontSize = "15px";
+				if (telopData[i].fontSize) ele.style.fontSize = telopData[i].fontSize;
+				if (telopData[i].color) ele.style.color = telopData[i].color;
+				if (telopData[i].top) ele.style.top = telopData[i].top;
+				tID.push(ele.id = telopData[i].id);
+				document.getElementById("telop").appendChild(ele);
+				telopY = telopY + telopOffset;  // オフセットを加算
+				if (telopY > telopBottom) telopY = startY;  // 画面下まできたら座標を上に戻す
+			}
+		}
+	}
+
+	myVideo.addEventListener("ended", function(){
+		currentTime = 0;
+		document.getElementById("playTime").innerHTML = currentTime + "秒";
+
+		$('#playMovie').show();
+		$('#stopMovie').hide();
+	}, true);
+
+	myVideo.addEventListener("timeupdate", function() {
+		// 現在の再生時間
+		var now = Math.round(myVideo.currentTime);
+		// 合計時間
+		var all = Math.round(myVideo.duration);
+
+		currentTime = now;
+		document.getElementById("playTime").innerHTML = Math.floor(currentTime) + "秒";
+	}, true);
+
+	// テロップが表示されているかどうか調べる。あればtrue、なければfalseを返す
+	function checkTelop(checkID){
+		for(var j=0; j<tID.length; j++){
+			if (tID[j] == checkID) return true;   // すでに表示している場合はtrueを返す
+		}
+		return false;
+	}
+
+	// 映像を再生する
+	function playVideo(){
+		if (timerID) { clearTimeout(timerID); }
+		tID = [];
+		var tDiv = document.getElementById("telop");
+		var tList = tDiv.getElementsByTagName("div"); // テロップを全て削除
+		for(var i=tList.length-1; i>=0; i--) tDiv.removeChild(tList[i]);
+		telopY = startY;
+		myVideo.currentTime = currentTime;
+		myVideo.play();
+
+		timerID = setInterval(moveTelop, 100);  // 0.1秒ごとにテロップを動かす
+	}
+
+	// 映像を停止する
+	function stopVideo(){
+		myVideo.pause();
+	}
+
+	//音量を上げる
+	function upVolume() {
+		myVideo.volume = myVideo.volume + 0.25;
+	}
+
+	//音量を下げる
+	function downVolume() {
+		myVideo.volume = myVideo.volume - 0.25;
+	}
+
+	// 再生ボタン
+	$('#playMovie').click(function(e) {
+		e.preventDefault();
+
+		$('#playMovie').hide();
+		$('#stopMovie').show();
+
+		playVideo();
+	});
+
+	// 停止ボタン
+	$('#stopMovie').click(function(e) {
+		e.preventDefault();
+
+		$('#playMovie').show();
+		$('#stopMovie').hide();
+
+		stopVideo();
+	});
+
+
+});
+</script>
+
+</head>
+<body>
+	<article>
+
+		<div id="viewArea">
+			<video id="myVideo" controls="" muted="" width="240" height="180">
+				<source src="../movie/sample.mp4">
+				<p>HTML5のvideoに対応したブラウザをご利用下さい</p>
+			</video>
+			<div id="telop"></div>
+		</div>
+		<div>
+			<img src="../img/play.jpg" id="playMovie" width="24" height="24" alt="再生ボタン" >
+			<img src="../img/stop.png" id="stopMovie" width="24" height="24" alt="停止ボタン" class="display-none" >
+			<span id="playTime">0</span>
+		</div>
+		<form>
+			<div class="subheader">テロップに追加</div>
+			<textarea id="telopCommand" cols="20" rows="1" style="width:400px;"></textarea>
+		</form>
+
+	</article>
+</body>
+</html>
