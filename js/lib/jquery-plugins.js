@@ -6007,10 +6007,11 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 						caption = image.attr('alt') || '',
 						title = target.data('title') || '';
 
+					// オリジナル画像に変換する。
 					var originalPath = imagePath;
-					if (0 <= imagePath.indexOf('_')) {
-						originalPath = imagePath.split("_")[0] + '.jpg';
-					}
+//					if (0 <= imagePath.indexOf('_')) {
+//						originalPath = imagePath.split("_")[0] + '.jpg';
+//					}
 
 					var data = {
 						imageId : imageId,
@@ -6122,7 +6123,6 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 
 					// 画像上下に余白を追加する。
 					var appendMarginTop = function() {
-						// オリジナル画像に変換する。
 						slider.find('.childKey img').each(function() {
 							var photo = $(this);
 							var x = Math.floor(photo[0].height * $(window).width() / photo[0].width);
