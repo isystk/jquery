@@ -11,145 +11,282 @@
 <link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
 <style type="text/css">
 
-/* #inspirations（インスピレーションで探す）
+/*--------------------------------------------------------------------
+
+	* フォト診断
+
+--------------------------------------------------------------------*/
+/* #inspiration-ranking（ウエディングフォト診断・今一番選ばれている！キーワード＆画像）
 --------------------------------------*/
-#inspirations{
-position:relative;
-z-index:1;
-}
-#inspirations *{
-margin:0;
+#inspirations #inspiration-ranking{
+border-radius:5px;
+box-shadow:inset 0 0 10px rgba(0,0,0,.04);
+background:#f5f5f5 url(../img/top_inspiration-ranking_bg.png);
+padding:0 10px 10px;
+width:690px;
 }
 
+#top #inspirations #inspiration-ranking{
+	width: 940px;
+}
 
-/* スクリーン */
-#inspirations .screen{
+/*
+ * .section_inspiration
+ */
+ #inspirations.section-iframe{
+ float:left;
+ margin-top: 30px;
+ }
+#inspirations .section_inspiration{
 position:relative;
-z-index:2;
-width:960px;
-height:480px;
-padding:40px 0 69px;
+background:url(../img/top_inspiration_bg.png) no-repeat 0 55px;
+padding-top:55px;
+height:348px;
+}
+#top #inspirations .section_inspiration{
+background: none;
+height: 155px;
+}
+#top #inspirations .section_inspiration .photos .image{
+border: none;
+}
+
+#inspirations .section_inspiration .heading{
+position:absolute;
+top:0;
+z-index:100;
+margin:0 -10px;
+}
+#top #inspirations .section_inspiration .heading-txt{
+position:absolute;
+top:23px;
+left: 255px;
+z-index:100;
+font-size: 15px;
+}
+
+#inspirations .section_inspiration .screen{
+position:relative;
+width:688px;
+height:347px;
 overflow:hidden;
 }
-#inspirations .screen .screen{
+#inspirations .section_inspiration .screen .screen{
 position:absolute;
-top:0;
+top:20px;
+left:0;
 z-index:11;
-background:url(../img/bg_inspirations_l.png) repeat-y 0 0 !important;
+background:url(../img/bg_inspirations_l.png) repeat-y !important;
 width:50px;
-height:437px;
-padding:0;
 }
-#inspirations .screen .screen + .screen{
+#inspirations .section_inspiration .screen .screen + .screen{
 background-image:url(../img/bg_inspirations_r.png) !important;
+left:auto;
 right:0;
 }
 
-
-/* カテゴリで絞込む */
-#inspirations .narrow-down{
+#inspirations .section_inspiration .photos{
+position:relative;
+margin:0;
+}
+#inspirations .section_inspiration .photos li{
+position:absolute;
+}
+#inspirations .section_inspiration .photos a{
+display:block;
+position:relative;
+}
+#inspirations .section_inspiration .photos .image{
+border:1px solid #d8d1b6;
+padding:3px;
+}
+#inspirations .section_inspiration .photos .checked,
+#inspirations .section_inspiration .photos .clip{
 position:absolute;
 top:0;
 right:0;
-z-index:13;
-}
-/* clearfix START */
-#inspirations .narrow-down:before,
-#inspirations .narrow-down:after{content:'';display:table;}
-#inspirations .narrow-down:after{clear:both;}
-#inspirations .narrow-down{zoom:1;}
-/* clearfix END */
-
-#inspirations .narrow-down dt{
-float:left;
-line-height:25px;
-font-weight:normal;
-}
-#inspirations .narrow-down dd{
-float:right;
-}
-*+html #inspirations .narrow-down dd{float:none;}/*IE7*/
-* html #inspirations .narrow-down dd{float:none;}/*IE6*/
-
-#inspirations .narrow-down dd dt,
-#inspirations .narrow-down dd dd{
-float:none;
-}
-
-
-/* もっと見る */
-#inspirations .more{
-position:absolute;
-left:50%;
-bottom:17px;
-margin:0 0 0 -120px;
-}
-
-
-/* 写真 */
-#inspirations .photos{
-position:relative;
-}
-#inspirations .photos li,
-#inspirations .photos li a{
-position:relative;
-float:left;
-display:block;
-border:solid 1px #dedede;
-background:#fff;
-}
-#inspirations .photos li{
-position:absolute;
-box-shadow:0 1px 1px #ebebeb;-moz-box-shadow:0 1px 1px #ebebeb;-webkit-box-shadow:0 1px 1px #ebebeb;
-}
-#inspirations .photos li a{
-margin:-1px;
-}
-#inspirations .photos .checked{
-position:absolute;
-top:-1px;
-right:-1px;
 z-index:1;
 }
-#inspirations .photos .clip{
-position:absolute;
-top:0px;
-right:0px;
-z-index:2;
-}
-#inspirations .photos .image{
-border:solid 4px #f4f4ed;
-}
-
-
-/* 写真 > スクリーン */
-#inspirations .screen .photos .link{
+#inspirations .section_inspiration .photos .link{
 display:none;
 }
-#inspirations .screen .photos .hover{
+#inspirations .section_inspiration .photos .hover{
 z-index:2 !important;
 margin-top:-17px;
 margin-left:-17px;
-border:solid 2px #e7e0d3;
-padding:15px;
+border:2px solid #e7e0d3;
+background:#fff;
+width:auto;
+padding:15px 15px 3px;
 }
-#inspirations .screen .photos .hover a{
-float:none;
-margin:0;
-background:#f4f4ed;
+#inspirations .section_inspiration .photos .hover .link{
+display:inline-block;
+margin-top:3px;
+margin-bottom:3px;
+background:url(../img/ico_arrow_right_brown_s.png) no-repeat 0 .3em;
+padding-left:18px;
+width:118px;
+line-height:1.33;
 }
-#inspirations .screen .photos .hover .link{
-display:block;
-position:static;
-margin-top:10px;
-margin-bottom:-5px;
-border:none;
-background:url(../img/ico_arrow_right_brown_s.png) no-repeat 0 50%;
-text-decoration:none !important;
+#inspirations .btnChange{
+position: absolute;
+bottom: 16px;
+right: 45px;
 }
-#inspirations .screen .photos .hover .link:hover{
-text-decoration:underline !important;
+
+.inspirationHowto{
+width: 230px;
+height: 413px;
+box-sizing: border-box;
+float: right;
+border: 1px solid #feb5bf;
+padding: 1px;
+margin-top: 30px;
 }
+.inspirationHowto h2{
+background: #f98a9d;
+text-align: center;
+margin: 0;
+padding: 10px 0;
+}
+.inspirationHowto .inner{
+margin: 9px;
+}
+.inspirationHowto .inner .ttl{
+text-align: center;
+margin: 15px 0 5px;
+}
+.inspirationHowto .inner .desc{
+line-height: 1.5em;
+margin: 10px 0;
+}
+.inspirationHowto .inner .desc span{
+color: #ff6377;
+}
+.inspirationHowto .inner ol{
+list-style: none;
+margin: 0; 
+padding: 0;
+}
+.inspirationHowto .inner li{
+padding: 10px 0;
+}
+.inspirationHowto .inner li ~ li{
+border-top: 1px solid #e0e0e0;
+}
+.inspirationHowto .inner li > *{
+display: inline-block;
+vertical-align: middle;
+}
+.inspirationHowto .inner li span{
+width: 165px;
+margin-left: 10px;
+}
+
+.inspirationSelected h2{
+font-size: 16px;
+}
+.inspirationSelected h2 span{
+font-size: 12px;
+font-weight: normal;
+margin-left: 10px;
+}
+.inspirationSelected .select{
+position: relative;
+}
+.inspirationSelected .select .prev,
+.inspirationSelected .select .next{
+position: absolute;
+top: 50px;
+left: 0;
+}
+.inspirationSelected .select .next{
+left: inherit;
+right: 0;
+}
+.inspirationSelected .selectWrap{
+width: 900px;
+margin: 0 auto;
+overflow: hidden;
+}
+.inspirationSelected .selectWrap ul{
+margin-bottom: 5px;
+}
+.inspirationSelected .selectWrap li{
+width: 160px;
+margin-right: 25px;
+position: relative;
+box-sizing: border-box;
+border: 1px solid #d8d1b6;
+}
+.inspirationSelected .selectWrap li ~ li:before{
+content: "+";
+display: block;
+position: absolute;
+top: 50px;
+left: -22px;
+font-size: 24px;
+color: #bdbdbd;
+}
+.inspirationSelected .selectWrap li:nth-child(5n){
+margin-right: 0;
+}
+.inspirationSelected .selectWrap li .deleteSelectImage{
+position: absolute;
+top: -8px;
+right: -8px;
+}
+.inspirationSelected .more{
+text-align: right;
+margin: 0;
+}
+.inspirationSelected .link{
+background: url(../img/ico_arrow_right_l_pink2.png) no-repeat 0 50%;
+padding-left: 14px;
+}
+.inspirationSelected .diagnose{
+text-align: center;
+margin-top: 0;
+}
+.inspirationSelected .diagnose span{
+display: block;
+margin-bottom: 3px;
+letter-spacing: .05em;
+color: #ff6377;
+font-weight: bold;
+}
+
+#inspirationKeywords {
+margin-bottom: 30px;
+}
+#inspirationKeywords .heading{
+color: #e63082;
+}
+#inspirationKeywords .keywordLink{
+list-style: none;
+text-align: center;
+font-weight: bold;
+}
+#inspirationKeywords .keywordLink li{
+display: inline-block;
+}
+#inspirationKeywords .keywordLink li + li{
+margin-left: 30px;
+}
+
+.inspirationSearch{
+color: #666;
+font-size: 20px;
+}
+
+.inspiration.results{
+margin-top: 50px;
+}
+.inspiration.results .article .photo ~ .photo {
+margin-top: 0;
+}
+
+
 </style>
 
 <script type="text/javascript" src="../js/lib/jquery.js"></script>
@@ -161,44 +298,927 @@ text-decoration:underline !important;
 <script type="text/javascript" src="../js/lib/common.js"></script>
 
 <script type="text/javascript">
+
+(function($, _) {
+	/*
+	 * インスピレーションボード表示機能
+	 *
+	 * Copyright (c) 2012 uedakeita at teamLab
+	 *
+	 * Description:
+	 * インスピレーションボード表示機能を提供する
+	 *
+	 * Sample:
+	 * 	$.ImageBoard.action(imageArray);
+	 *
+	 */
+	// イメージボードを設定する
+	$.ImageBoard = {
+		// base offsets
+		'offsets': [
+				{'top': -100, 'left': 0}
+			,	{'top':    0, 'left': 0}
+			,	{'top':    0, 'left': 0}]
+	,	'center': {'left': 350, 'top': 150}
+	,	'renderWidthBase' : 184
+	,	'randMargin': 10
+	,	'baseMargin': 5
+	,	'bottomMargin': 5
+	,	'duration': 500
+	,	'easing': 'easeOutQuint'
+	,	'targetImages': []
+	,	'inprocess': false
+	,	'readiness': false
+	,	'callback': function() {}
+	,	'screenW': 960
+	,	'imageW': 176
+	,	'imageH': 134
+	,	'imageExpansion': 1.1
+	,	'coefficient': 1.0
+	,	'coefficientRight': 1.0
+	,	'coefficientLeft': 1.0
+	}
+
+	// 乱数を返却する(繰下げ)
+	$.ImageBoard.rand = function(range, base) {
+		base = base || 0;
+		return Math.floor(Math.random()*range)+base;
+	}
+
+	// Imgタグ要素を生成する
+	function preLoadImages(images) {
+		var cacheImages = [];
+		for (var i=0; i<images.length; i++) {
+			var id = "";
+			var image = images[i];
+			var name = "";
+			var weddingName = "";
+			var weddingNameS = "";
+			var weddingId = "";
+			if (!_.isString(image)) {
+				id = images[i].id;
+				image = images[i].path;
+				name = images[i].name;
+				weddingName = images[i].wedding_name;
+				weddingNameS = images[i].wedding_name_s;
+				weddingId = images[i].wedding_id;
+			}
+			cacheImages[i] = new Image();
+			cacheImages[i].id = id;
+			cacheImages[i].src = image;
+			cacheImages[i].title = weddingNameS;
+			cacheImages[i].weddingName = weddingName;
+			cacheImages[i].alt = name;
+			cacheImages[i].width = $.ImageBoard.imageW;
+			cacheImages[i].height = $.ImageBoard.imageH;
+			cacheImages[i].name = weddingId;
+			cacheImages[i].className = "image gallery-photo";
+		}
+		return cacheImages;
+	}
+
+	//マウスオーバーイベントをつける
+	$.ImageBoard.popup = function($li) {
+		// google画像検索のようなポップアップ表示する
+		var option = { duration: 500, easing: 'easeOutElastic' };
+		$li.hover(
+				function () {
+					var left = parseInt($(this).css('left'));
+					var top = parseInt($(this).css('top'));
+					var position = { left: $(this).data('left'), top: $(this).data('top') };
+
+					// 枠外のものは正常に表示される位置に変更
+					if (0 > left) {
+						position.left = ($.ImageBoard.imageW * $.ImageBoard.coefficientLeft) - $.ImageBoard.imageW;
+					} else if (left > $.ImageBoard.screenW - $.ImageBoard.imageW * $.ImageBoard.coefficientRight) {
+						position.left = $.ImageBoard.screenW - ($.ImageBoard.imageW * $.ImageBoard.coefficientRight);
+					}
+					if (top > 140) {
+						position.top = top - 10;
+					}
+
+					var li = $(this);
+
+					li.addClass('hover').css(position).find('.gallery-photo')
+						.animate({ width: $.ImageBoard.imageW * $.ImageBoard.imageExpansion, height: $.ImageBoard.imageH * $.ImageBoard.imageExpansion }, option);
+
+					// check済みじゃなかったらクリップ画像を表示する
+					if (!li.find('img').hasClass('checked')) {
+						li.find('.clip').removeClass('display-none');
+					}
+				},
+				function () {
+					var li = $(this);
+					// 元に戻す
+					li.stop(true, true).css({
+						'top': li.data('top')
+						,'left': li.data('left')
+					}).removeClass('hover').find('.gallery-photo').stop(true, true).css({ width: $.ImageBoard.imageW, height: $.ImageBoard.imageH });
+					// クリップ画像を非表示にする
+					li.find('.clip').addClass('display-none');
+				}
+		);
+	}
+
+
+	// li要素を生成する
+	$.ImageBoard.place = function($board) {
+
+		this.targetImages = _.shuffle(this.targetImages);
+
+		var obj = this
+		,	step = 0
+		,	cacheImages = preLoadImages(obj.targetImages)
+		,	zIndex = obj.rand(5)
+		,	breakIndex = 0;
+
+		// UL要素を空にする
+		$board.find('ul').empty();
+
+		for (var i=0; i<obj.targetImages.length; i++) {
+
+			if(cacheImages[i].complete) {
+				var $base = $('<li class="ready image' + cacheImages[i].id + '"></li>')
+				,	$link = $('<a href="#" class="gallery" data-imageid="' + cacheImages[i].id + '" data-weddingname="' + cacheImages[i].weddingName + '"></a>')
+				,	$name = $('<a target="_blank" class="link" href="/wedding/' + cacheImages[i].name + '/">' + cacheImages[i].title + '</a>')
+				,	$img = $(cacheImages[i])
+				,	$clipImage = $('<img src="../img/ico_photo_clip.png" alt="clip!" width="48" height="48" class="clip display-none" />');
+
+				// 幅を超えた場合、次の行を対象とする
+				if (obj.offsets.length > step
+						&& obj.offsets[step].left > obj.screenW) {
+					step++;
+				}
+				// 設定行を超えた場合、処理を終了する
+				if (obj.offsets.length <= step) {
+					obj.readiness = true;
+					break;
+				}
+
+				// IE8でimageクラスでサイズがズレるのでリサイズする
+				$img.attr('width', $.ImageBoard.imageW);
+				$img.attr('height', $.ImageBoard.imageH);
+
+				$link.append($img);
+				$link.append($clipImage);
+				$base.append($link).append($name);
+				$board.find('ul').append($base);
+				obj.showImage(
+					$board
+				,	$base
+				,	step);
+
+				obj.popup($base);
+			} else {
+				cacheImages[i].onload = function() {
+
+					var $base = $('<li class="ready' + $(this).attr('id') + '"></li>')
+					,	$link = $('<a href="#" class="gallery" data-imageid="' + $(this).attr('id') + '"  data-weddingname="' + this.weddingName + '"></a>')
+					,	$name = $('<a target="_blank" class="link" href="/wedding/' + $(this).attr('name') + '/">' + $(this).attr('title') + '</a>')
+					,	$img = $(this)
+					,	$clipImage = $('<img src="../img/ico_photo_clip.png" alt="clip!" width="48" height="48" class="clip display-none" />');
+
+					if (obj.offsets.length > step
+							&& obj.offsets[step].left > obj.screenW) {
+						step++;
+					}
+					if (obj.offsets.length <= step) {
+						obj.readiness = true;
+						return false;
+					}
+
+					// IE8でimageクラスでサイズがズレるのでリサイズする
+					$img.attr('width', $.ImageBoard.imageW);
+					$img.attr('height', $.ImageBoard.imageH);
+
+					$link.append($img);
+					$link.append($clipImage);
+					$base.append($link).append($name);
+					$board.find('ul').append($base);
+					obj.showImage(
+						$board
+					,	$base
+					,	step);
+
+					obj.popup($base);
+				};
+			}
+		}
+
+		var interval = setInterval(function() {
+
+			if (obj.inprocess && (obj.readiness || obj.targetImages.length === $board.find('li.ready').size())) {
+				obj.callback();
+			}
+			if (obj.readiness || obj.targetImages.length === $board.find('li.ready').size()) {
+				// 全ての画像の準備が整ったらアニメーションを開始する
+				$board.find('li.ready').each(function(i) {
+					var $li = $(this);
+					if ($li.is(':animated')) return false;
+					$li.fadeIn()
+						.css({
+							'opacity': 0
+						,	'top': obj.center.top + obj.rand(150)
+						,	'left': obj.center.left + obj.rand(150)
+						}).animate({
+							'opacity': 1
+						,	'top': $li.data('top')
+						,	'left': $li.data('left')
+						}, obj.duration, obj.easing, function() {
+							$(this).removeClass('ready')
+						});
+				});
+				obj.inprocess = false;
+				obj.readiness = false;
+			}
+		}, 100);
+	};
+
+	$.ImageBoard.showImage = function($board, $li, step) {
+
+		var obj = this;
+
+		if (obj.offsets.length <= step) {
+			return false;
+		}
+
+		// 左端位置初期設定
+		if (obj.offsets[step].left === 0) {
+			obj.offsets[step].left = -(obj.rand(150));
+		}
+
+		// 描画位置
+		var renderTop = this.rand(100);
+		var renderLeft = obj.offsets[step].left;
+		var renderWidth = $.ImageBoard.renderWidthBase + obj.rand(obj.randMargin, obj.baseMargin);
+	//	var renderWidth = $li.width() + obj.rand(obj.randMargin, obj.baseMargin);
+		var renderRight = renderLeft + renderWidth;
+
+		// 描画予定位置をキューに詰め込み、上段の画像
+		var queue = [this.rand(18, 18)];
+
+		// 二段目以降
+		if (step > 0) {
+
+			$('.step_'+(step-1), $board).each(function(i) {
+
+				// 上段画像
+				var $upstair = $(this);
+				// 上段画像位置
+				var upstairLeft = $upstair.data('left');
+				var upstairRight = $upstair.data('right');
+				var upstairBottom = $upstair.data('bottom');
+
+				// 画像上部の当たり判定
+				if ((renderLeft > upstairRight && renderRight < upstairLeft)
+						|| (renderLeft < upstairRight && renderRight > upstairLeft)) {
+
+					queue.push(upstairBottom + obj.rand(obj.randMargin, obj.bottomMargin));
+				}
+
+				// 描画画像の右端が上段画像の左端より小さい場合、それ以降の画像は無視する
+				if (renderRight < upstairLeft) {
+
+					// ただし、左端の画像の場合は上段の画像位置をキューに追加する
+	//				if (queue.length === 1 && queue[0] < 50) {
+						queue.push(upstairBottom + obj.rand(obj.randMargin, obj.bottomMargin));
+	//				}
+					return false;
+				}
+			});
+		}
+
+		// 上段の画像の中から一番下の画像位置を描画位置として取得する
+		renderTop = Math.max.apply(Math, queue);
+
+		// アニメーション後の画像配置位置をデータ属性として画像に持たせる
+		$li.css({
+				'position': 'absolute'
+			,	'display': 'block'
+			,	'top': renderTop
+			,	'left': obj.offsets[step].left
+			,	'zIndex': 0
+			,	'opacity': 0
+			})
+			.addClass('step_'+step)
+			.data('width', $li.innerWidth())
+			.data('height', $li.innerHeight())
+			.data('top', renderTop)
+			.data('left', renderLeft)
+			.data('right', renderLeft + $li.innerWidth())
+			.data('bottom', renderTop + $li.innerHeight())
+			;
+
+		// リンクの文字列は拡大時の幅に設定しておく
+		$li.find('.link').innerWidth($.ImageBoard.imageW * $.ImageBoard.imageExpansion);
+
+		obj.offsets[step].left
+			= obj.offsets[step].left + renderWidth;
+	}
+
+	$.ImageBoard.action = function(data) {
+
+		var obj = this;
+		var animated = [];
+		if (obj.inprocess) return;
+		obj.inprocess = true;
+		obj.targetImages = data;
+
+		// 閉じる場合のアニメーションを設定する
+		$('#mainboard').find('li').each(function(i) {
+			$(this)
+				.animate({
+					'left': obj.center.left + $.ImageBoard.rand(150)
+				,	'top': obj.center.top + $.ImageBoard.rand(150)
+				,	'opacity': 0
+				}, obj.duration + $.ImageBoard.rand(100), obj.easing
+				, function() {
+					animated.push(true);
+				});
+		});
+
+		// インターバル処理(閉じるアニメーション設定後に、イメージ生成処理を開始する)
+		var interval = setInterval(function() {
+			if ($('#mainboard').find('li').size() === animated.length) {
+				$.ImageBoard.place($('#mainboard'));
+				clearInterval(interval);
+			}
+		}, 100);
+
+	}
+
+})(jQuery, _);
+
 $(function() {
 
-	// インスピレーションボードを生成する
-	$.inspirationBoad([
-		'../img/photo/photo1.jpg',
-		'../img/photo/photo2.jpg',
-		'../img/photo/photo3.jpg',
-		'../img/photo/photo4.jpg',
-		'../img/photo/photo5.jpg',
-		'../img/photo/photo6.jpg',
-		'../img/photo/photo7.jpg',
-		'../img/photo/photo8.jpg',
-		'../img/photo/photo9.jpg',
-		'../img/photo/photo10.jpg',
-		'../img/photo/photo11.jpg',
-		'../img/photo/photo12.jpg',
-		'../img/photo/photo13.jpg',
-		'../img/photo/photo14.jpg',
-		'../img/photo/photo15.jpg',
-		'../img/photo/photo16.jpg'
-	]);
+	var imageList = {
+		'page1' : ['../img/photo/photo1.jpg','../img/photo/photo2.jpg','../img/photo/photo3.jpg','../img/photo/photo4.jpg','../img/photo/photo5.jpg','../img/photo/photo6.jpg','../img/photo/photo7.jpg','../img/photo/photo8.jpg','../img/photo/photo9.jpg','../img/photo/photo10.jpg','../img/photo/photo11.jpg','../img/photo/photo12.jpg'],
+		'page2' : ['../img/photo/photo13.jpg', '../img/photo/photo14.jpg', '../img/photo/photo15.jpg', '../img/photo/photo16.jpg']
+	};
+	var maxPageNo = 2;
+
+	/* ここからインスピレーションボード関連 */
+	(function() {
+
+		var morePageNo = 0,
+			timer = null,
+			imageW = 128,
+			imageH = 96;
+
+		// インスピレーションボードを生成する
+		var createInspirationBoard = function(pageNo) {
+
+			if (maxPageNo < pageNo) {
+				pageNo = 1;
+			}
+
+			var res = {
+				'pager' : {nowPage : pageNo},
+				'images' : imageList['page'+ pageNo],
+				'imageIdClipedList' : []
+				};
+
+			renderImages(res);
+		};
+
+		// あなたがクリップした写真
+		var clipImageSlider = $('.js-clipImageSlider').mynavislider({
+			'parentKey': 'ul.parentKey',
+			'childKey': 'li.childKey',
+			'shift': 5,
+			'shiftw' : 925,
+			'backBtnKey': '#gallery-back',
+			'nextBtnKey': '#gallery-next',
+			slideCallBack: function(data) {
+				clipImageSlider.pageNo = data.pageNo;
+				clipImageSlider.maxPageNo = data.maxPageNo;
+			}
+		}).show();
+		clipImageSlider.changePage(1);
+
+		$('#inspirationBoad').show();
+
+
+		// クリップの削除処理
+		var bindDeleteClip = function(obj) {
+			var deleteLoading = false;
+			obj.click(function(e) {
+				e.preventDefault();
+				var self = $(this),
+					li = self.closest('.childKey'),
+					imageId = self.data('imageid');
+				
+				if (deleteLoading) {
+					return;
+				}
+				deleteLoading = true;
+				
+				$("#loading").show();
+				
+
+				(function(data){
+
+					// 画像スライダーから対象画像を削除
+					li.remove();
+
+					clipImageSlider.find('li.childKeyNoimage').remove();
+					if (clipImageSlider.find('li.childKey').length < 5) {
+						for (var i=0, len=(5-clipImageSlider.find('li.childKey').length); i<len; i++) {
+							var noimageClild = $(['<li class="childKey childKeyNoimage" style="margin-right: 25px;">',
+									'<img src="../img/mypage-mini_img_noimg.jpg" width="158" />',
+								'</li>'].join(''));
+							clipImageSlider.find('ul').append(noimageClild);
+						}
+					}
+
+					var noimageSize = clipImageSlider.find('li.childKeyNoimage').length,
+						childSize = clipImageSlider.find('li').length,
+						maxPageNo = Math.floor(childSize/5) + ((childSize%5 !== 0) ? 1 : 0);
+
+					if (maxPageNo < clipImageSlider.pageNo) {
+						clipImageSlider.changePage(maxPageNo);
+						clipImageSlider.refresh();
+					} else{
+						clipImageSlider.refresh();
+						clipImageSlider.changePage(clipImageSlider.pageNo);
+					}
+
+					// 「診断するボタン」の表示制御
+					if ((childSize - noimageSize) < 5) {
+						$('.js-inspirationSearchBtn').hide();
+						$('.js-inspirationSearchBtn.off').show();
+					}
+
+					// インスピレーションボードの対象画像を未クリップ状態に変更
+					var inspirationLi = $('#inspirations').find('li'+imageId);
+					inspirationLi.removeClass('selected');
+					inspirationLi.find('a.gallery img.checked').remove();
+
+					deleteLoading = false;
+				})();
+
+			})
+		};
+		
+		clipImageSlider.find('.childKey .js-deleteClip').each(function() {
+			bindDeleteClip($(this));
+		});
+		
+		// インスピレーションボード生成後に呼ばれるコールバック関数
+		var renderImages = function(res) {
+
+			var images = res.images,
+				pager = res.pager,
+				imageIdClipedList = res.imageIdClipedList;
+
+			// ページング部分の表示を消す。
+			$('#inspiration-copy .section_inspiration').find('.pagination').remove();
+
+			$.ImageBoard.callback = function() {
+				var addLoading = false;
+				$('li', $('#mainboard')).each(function() {
+					// キャッシュする
+					var li = $(this),
+						id = li.find('img.gallery-photo').attr('id');
+
+					// IE8でimageクラスでサイズがズレるのでリサイズする
+					li.find('img.gallery-photo').attr('width', imageW);
+					li.find('img.gallery-photo').attr('height', imageH);
+
+					// 再度表示し直した際に保存済写真にCheck!画像を付ける
+					if ($.inArray(Number(id), imageIdClipedList) != -1) {
+						li.addClass('selected');
+						li.find('a.gallery').append($('<img src="../img/ico_photo_check.png" alt="check!" width="46" height="48" class="checked" />').attr('id', 'checked-' + id));
+					}
+
+					// IB写真クリック時のイベントをバインドする
+					li.click(function(e) {
+
+						// 式場詳細リンクの場合はそのまま遷移させる
+						if ('link' == e.target.className) {
+							return true;
+						}
+
+						// イベントをキャンセルする
+						e.preventDefault();
+
+						// Check済IB写真をクリックした場合
+						if (li.hasClass('selected')) {
+							return false;
+						}
+
+						// 一部アニメーション処理しており非同期の為、処理が完了しているか判断する
+						if ($.ImageBoard.inprocess || addLoading) {
+							return false;
+						}
+						addLoading = true;
+
+						// Check!画像を追加する
+						li.addClass('selected');
+						li.find('a.gallery').append($('<img src="../img/ico_photo_check.png" alt="check!" width="46" height="48" class="checked" />').attr('id', 'checked-' + imageId));
+						// クリップ画像を非表示にする
+						li.find('.clip').addClass('display-none');
+
+						// 選択画像の情報をキャッシュする
+						var photo = li.find('img.gallery-photo'),
+							imageId = photo.attr('id');
+
+						$("#loading").show();
+
+
+						(function() {
+								
+								// クリップ時のアニメーション
+								clipAnimation(li, function() {
+
+									var weddingName = li.find('a.gallery').data('weddingname') || '',
+										imageId = li.find('a.gallery').data('imageid') || '',
+										imageUrl = li.find('img.gallery-photo').attr('src') || '',
+										href = li.find('a.link').attr('href') || '',
+										noimageSize = clipImageSlider.find('li.childKeyNoimage').length,
+										childSize = clipImageSlider.find('li.childKey').length + 1 - noimageSize,
+										pageNo = Math.floor(childSize/5) + ((childSize%5 !== 0) ? 1 : 0);
+
+									var newClild = $(['<li class="childKey childKey'+imageId+'" pageno="'+childSize+'"  style="margin-right: 25px;float: left;">',
+										'<a href="'+href+'" title="'+weddingName+'" data-imageid="'+imageId+'" target="_blank">',
+											'<img src="'+imageUrl+'" class="image" alt="'+weddingName+'" width="158">',
+										'</a>',
+										'<a href="#" class="deleteSelectImage js-deleteClip" data-imageid="'+imageId+'"><img src="../img/ico_delete.png" height="19" width="19" alt="解除" /></a>',
+									'</li>'].join(''));
+									
+									// クリップ削除ボタンのイベント設定
+									bindDeleteClip(newClild.find('.js-deleteClip'));
+									
+									clipImageSlider.find('li.childKeyNoimage').remove();
+									clipImageSlider.find('ul').append(newClild);
+
+									if (clipImageSlider.find('li.childKey').length < 5) {
+										for (var i=0, len=(5-clipImageSlider.find('li.childKey').length); i<len; i++) {
+											var noimageClild = $(['<li class="childKey childKeyNoimage" style="margin-right: 25px;">',
+													'<img src="../img/mypage-mini_img_noimg.jpg" width="158" />',
+												'</li>'].join(''));
+											clipImageSlider.find('ul').append(noimageClild);
+										}
+									}
+									
+									clipImageSlider.refresh();
+									clipImageSlider.changePage(pageNo);
+
+									// 追加した要素を光らせる
+									newClild.animate({
+										opacity: 0.3
+									},{
+										duration: 500,
+										complete: function() {
+											newClild.animate({
+												opacity: 1
+											}, 500);
+										}
+									});
+									
+									// 選択した画像が5つに達した時点で「診断する」ボタンを光らせる
+									if (childSize === 5) {
+										var turnCount = 0,
+											turnLimit = 3, // 点滅回数
+											turnMS = 300; // 点滅タイマーのミリ秒
+
+										// 「診断する」ボタンを光らせる
+										var timer = setInterval(function() {
+											// opacity 状態の判定
+											var opacity = $('.js-inspirationSearchBtn').css('opacity');
+											// 点滅アニメーション
+											if (opacity <= 0.3) {
+												$('.js-inspirationSearchBtn').animate({
+													opacity: 1
+												}, turnMS);
+												// 点滅回数到達で終了
+												if (turnCount >= turnLimit) {
+													clearInterval(timer);
+													return;
+												}
+											} else if (opacity >= 1) {
+												$('.js-inspirationSearchBtn').animate({
+													opacity: 0.3
+												}, turnMS);
+												turnCount++;
+											}
+										}, 100);
+
+										$('#errorsInspirationArea').empty();
+									}
+
+									// 「診断するボタン」の表示制御
+									if (5 <= childSize) {
+										$('.js-inspirationSearchBtn').show();
+										$('.js-inspirationSearchBtn.off').hide();
+									}
+
+									addLoading = false;
+									requireResearchFlg = true;
+								});
+
+						})();
+
+					});
+					
+				});
+				
+			};
+
+			var USER_AGENT = {
+					OPERA : 'opera',
+					MSIE6 : 'msie6',
+					MSIE7 : 'msie7',
+					MSIE8 : 'msie8',
+					MSIE9 : 'msie9',
+					MSIE : 'msie',
+					CHROME : 'chrome',
+					SAFARI : 'safari',
+					GECKO : 'gecko'
+				};
+				
+			var clipAnimation = function(target, callback) {
+				// 移動座標を取得
+				var moveStartObj = $('#mainboard');
+				var moveStartOffset = moveStartObj.offset();
+				var fromX = moveStartOffset.left + Math.floor(moveStartObj.width()/2) - 90;
+				var fromY = moveStartOffset.top + Math.floor(moveStartObj.height()/2) - 60;
+				var moveEndObj = $('p.diagnose');
+				var moveEndOffset = moveEndObj.offset();
+				var moveEndX = moveEndOffset.left + Math.floor(moveEndObj.width()/2);
+				var moveEndY = moveEndOffset.top + Math.floor(moveEndObj.height()/2);
+				var rX = moveEndX - fromX;
+				var rY = moveEndY - fromY;
+				
+				// クローンを同座標に生成
+				$('<div id="inspiration-copy" style="position:absolute;z-index:9999;" ></div>').appendTo('body');
+				var cloneTarget = target.find('img.gallery-photo').clone(false);
+				// 画像を絶対座標に変更
+				cloneTarget.css({
+					'position': 'absolute',
+				});
+				$('#inspiration-copy').append(cloneTarget);
+				$('#inspiration-copy').css({'z-index': '9999', 'left' : fromX+'px', 'top' : fromY+'px'});
+				$('#inspiration-copy').css('display', '');
+
+				// 拡大アニメーション
+				$('#inspiration-copy').find('img.gallery-photo')
+					.animate({
+						width:target.width()*1.4,
+						height:target.height()*1.15
+					}, {
+						duration: 150
+					});
+
+				// ユーザーエージェントによる微調整データ
+				var complement = createComplement();
+				
+				//　移動軌跡座標配列を生成する
+				var gPoint = [{x:0, y:0},{x:rX+50, y:50},{x:rX+20, y:100},{x:rX, y:rY}];
+				
+				$.each(bezer(gPoint, 24), function(i, value) {
+					var isAfterimage = true;
+					$('#inspiration-copy').find('img').animate(
+						{
+							left: value.x,
+							top: value.y
+						},
+						{
+							duration: 20,
+							easing: 'easeInCubic',
+							step: function() {
+								// 画像のサイズを変化させる
+								$(this).css({
+									width: $(this).width()-$(this).width()/24/complement.w,
+									height: $(this).height()-$(this).height()/24/complement.h
+								});
+								// 画像を残像させる
+								if (i%3==0 && isAfterimage) {
+									$(this).clone().appendTo($('#inspiration-copy'))
+										.fadeOut(
+											1000,
+											function(){
+												$(this).remove();
+											}
+										);
+								}
+								isAfterimage = false;
+							},
+							complete:function(){
+								if (value.x != rX || value.y != rY) return;
+								$('#inspiration-copy').fadeOut(
+										1000,
+										function(){
+											$(this).empty();
+											if (callback) {
+												callback();
+											}
+										}
+									);
+							}
+						}
+					);
+				});
+				
+				// ユーザーエージェントによる微調整データを生成する
+				function createComplement() {
+					if (getUserAgent() === USER_AGENT.SAFARI) {
+						complementW = 8;
+						complementH = 30;
+					} else if ($.inArray(getUserAgent(), [
+							USER_AGENT.MSIE6, 
+							USER_AGENT.MSIE7, 
+							USER_AGENT.MSIE8]) !== -1) {
+						complementW = 7.2;
+						complementH = 25;
+					} else {
+						complementW = 4;
+						complementH = 4;
+					}
+					return {w:complementW, h:complementH};
+				}
+
+				// ベジェ曲線配列データを生成する
+				function bezer(points, divide) {
+					var result = [];
+					for( var i = 1; i <= divide; i++) {
+						var s = i/divide;
+						var t = 1-s;
+						result.push( {
+							x: t*t*t*points[0].x + 3*t*t*s*points[1].x + 3*t*s*s*points[2].x + s*s*s*points[3].x,
+							y: t*t*t*points[0].y + 3*t*t*s*points[1].y + 3*t*s*s*points[2].y + s*s*s*points[3].y
+						} );
+					}
+					return result;
+				}
+
+				function getUserAgent() {
+					var userAgent = window.navigator.userAgent.toLowerCase();
+					var appVersion = window.navigator.appVersion.toLowerCase();
+					if (userAgent.indexOf(USER_AGENT.OPERA) != -1) {
+						return USER_AGENT.OPERA;
+					} else if (userAgent.indexOf(USER_AGENT.MSIE) != -1) {
+						if (appVersion.indexOf("msie 6.") != -1) {
+							return USER_AGENT.MSIE6;
+						} else if (appVersion.indexOf("msie 7.") != -1) {
+							return USER_AGENT.MSIE7;
+						} else if (appVersion.indexOf("msie 8.") != -1) {
+							return USER_AGENT.MSIE8;
+						} else if (appVersion.indexOf("msie 9.") != -1) {
+							return USER_AGENT.MSIE9;
+						} else {
+							return USER_AGENT.MSIE;
+						}
+					} else if (userAgent.indexOf(USER_AGENT.CHROME) != -1) {
+						return USER_AGENT.CHROME;
+					} else if (userAgent.indexOf(USER_AGENT.SAFARI) != -1) {
+						return USER_AGENT.SAFARI;
+					} else if (userAgent.indexOf(USER_AGENT.GECKO) != -1) {
+						return USER_AGENT.GECKO;
+					} else {
+						return false;
+					}
+				}
+
+			};
+			
+			$.ImageBoard.offsets = [
+				{'top': -100, 'left': -10},
+				{'top': 0, 'left': -20}];
+			$.ImageBoard.center = {'left': 200, 'top': 50};
+			$.ImageBoard.renderWidthBase = imageW - 10;
+			$.ImageBoard.screenW = 675;
+			$.ImageBoard.baseMargin = 20;
+			$.ImageBoard.randMargin = 12;
+			$.ImageBoard.bottomMargin = 3;
+			$.ImageBoard.imageW = imageW;
+			$.ImageBoard.imageH = imageH;
+			$.ImageBoard.imageExpansion = 1.5;
+			$.ImageBoard.coefficient = 1.33;
+			$.ImageBoard.coefficientRight = 1.7;
+			$.ImageBoard.coefficientLeft = 1.2;
+			
+			$.ImageBoard.action(images);
+		};
+
+		// 8秒間隔でページを切り替える
+		(function() {
+			var startInspiration = function() {
+				// 多重クリック防止
+				if(!$.ImageBoard.inprocess) {
+					// インスピレーションボードを生成する
+					morePageNo = morePageNo + 1;
+					createInspirationBoard(morePageNo);
+				}
+			};
+			var startTimer = function() {
+//				timer = setTimeout(function() {
+//					clearInterval(timer);
+//					startInspiration();
+//					startTimer();
+//				} , 8000);
+			};
+			var stopTimer = function() {
+				clearInterval(timer);
+				timer = null;
+			};
+			// Windowロード時にインスピレーションボードを生成する
+			$(window).load(function () {
+				startInspiration();
+				startTimer();
+			});
+			// インスピレーションボードにマウスオーバーした際は、自動切り替えしない。
+			$('#mainboard').hover(
+				function () {
+					stopTimer();
+				},
+				function () {
+					startTimer();
+				}
+			);
+		})();
+
+		// 『他の写真を見る』ボタン クリック時のイベント
+		$('#more').click(function(e) {
+			// イベントをキャンセルする
+			e.preventDefault();
+
+			// 多重クリック防止
+			if($.ImageBoard.inprocess) {
+				return false;
+			}
+
+			// インスピレーションボードを生成する
+			createInspirationBoard(++morePageNo);
+		});
+
+
+		// 診断する
+		(function() {
+			// 「診断する」ボタン押下時
+			$('.js-inspirationSearchBtn').click(function(e) {
+				e.preventDefault();
+			});
+		})();
+		
+	})();
+	/* ここまでインスピレーションボード関連 */
+
 });
 </script>
 </head>
 <body>
-<div id="main">
-<div id="inspirations">
-	<div class="screen">
-		<div id="mainboard">
-			<p class="loading"><img src="../img/img_gallery_loading.png" alt="ローディング中" /></p>
+<div style="margin: 0 auto;width: 960px;">
+	<div id="inspirationBoad" class="display-none">
+		<div class="clearfix">
+			<div id="inspirations" class="section section-iframe" data-initflg="1">
+	
+				<div id="inspiration-ranking" class="col-l">
+					<div class="section_inspiration">
+						<h2 class="heading"><img src="http://wedding.mynavi.jp/img/top_inspiration_ttl.png" alt="理想の会場、きっと見つかる！ウエディングフォト診断" width="270" height="80" /></h2>
+			
+						<div id="mainboard" class="screen">
+							<ul class="photos"><img src="http://wedding.mynavi.jp/img/top_inspiration_loading.png" alt="ローディング中" width="688" height="270" /></ul>
+							<div class="screen"></div>
+							<div class="screen"></div>
+							<p id="more" class="btnChange"><a href="#"><img src="http://wedding.mynavi.jp/img/btn_inspiration_change.png" alt="写真を入れ替える" width="180" height="30" class="imghover" /></a></p>		
+						</div>
+						</div>
+				</div>
+			</div>
+						
+			
+			<div class="inspirationHowto">
+				<h2><img src="http://wedding.mynavi.jp/img/inspiration_howto.png" alt="診断のやり方" width="112" height="18" /></h2>
+				<div class="inner">
+					<p class="desc">気になる写真を5枚選んで<span>下にある【診断する】ボタンをクリック</span>！あなたにぴったりな結婚式＆会場を診断します♪</p>
+					<p class="ttl"><img src="http://wedding.mynavi.jp/img/inspiration_lets.png" alt="" width="140" height="24"></p>
+					<ol>
+						<li><img src="http://wedding.mynavi.jp/img/ico_quick_help_a.png" alt="STEP A" width="32" height="43" /><span>気になる写真を5枚以上クリック！選んだ写真は下に表示されます。</span></li>
+						<li><img src="http://wedding.mynavi.jp/img/ico_quick_help_b.png" alt="STEP B" width="32" height="43" /><span>他の写真を見たい場合は写真右下の「写真を入れ替える」ボタンを押すとシャッフルされます。</span></li>
+						<li><img src="http://wedding.mynavi.jp/img/ico_quick_help_c.png" alt="STEP B" width="32" height="43" /><span>5枚以上写真を選んだら、「診断する」ボタンをクリック！</span></li>
+					</ol>
+				</div>
+			</div>
+			</div>
+		<div id="inspirationSelected" class="inspirationSelected">
+			<h2 style="margin: 15px 0 0 0;">あなたが選んだ写真<span>※間違えて選んでしまったものは、写真にカーソルをあわせると出てくる右上の×ボタンで削除ができます。</span></h2>
+			<div class="select js-clipImageSlider display-none">
+				<div class="selectWrap" style="width: 906px;">
+					<ul class="photos parentKey">
+						<li class="childKey childKeyNoimage" style="margin-right: 25px;"><img src="../img/mypage-mini_img_noimg.jpg" width="158"></li><li class="childKey childKeyNoimage" style="margin-right: 25px;"><img src="../img/mypage-mini_img_noimg.jpg" width="158"></li><li class="childKey childKeyNoimage" style="margin-right: 25px;"><img src="../img/mypage-mini_img_noimg.jpg" width="158"></li><li class="childKey childKeyNoimage" style="margin-right: 25px;"><img src="../img/mypage-mini_img_noimg.jpg" width="158"></li><li class="childKey childKeyNoimage" style="margin-right: 25px;"><img src="../img/mypage-mini_img_noimg.jpg" width="158"></li>
+					</ul>
+				</div>
+				<p id="gallery-back" class="prev display-none"><a href="#"><img src="http://wedding.mynavi.jp/img/pc_adv_btn_carousel_back.png" alt="前へ" width="19" height="19"></a></p>
+				<p id="gallery-next" class="next display-none"><a href="#"><img src="http://wedding.mynavi.jp/img/pc_adv_btn_carousel_next.png" alt="次へ" width="19" height="19"></a></p>
+			</div>
+			<p class="diagnose"><span>写真を5枚以上選んだらクリック↓</span>
+				<a href="#" class="js-inspirationSearchBtn off"><img src="http://wedding.mynavi.jp/img/btn_inspiration_diagnose_off.png" alt="診断する" width="360" height="60" class=""></a>
+				<a href="#" class="js-inspirationSearchBtn  display-none "><img src="http://wedding.mynavi.jp/img/btn_inspiration_diagnose.png" alt="診断する" width="360" height="60" class="imghover"></a>
+			</p>
 		</div>
-		<p class="more">
-			<a href="#" id="more">
-				<img src="../img/btn_inspirations_more.png" alt="他の写真を見る" width="241" height="37" class="imgover" />
-			</a>
-		</p>
+		<div id="errorsInspirationArea"></div>
 	</div>
-</div>
 </div>
 </body>
 </html>
