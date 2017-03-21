@@ -1,0 +1,479 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-language" content="ja" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<link href="../css/default.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/common.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../css/development.css" rel="stylesheet" type="text/css" media="all" />
+<link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
+<style type="text/css">
+
+table.editTable{
+border: none;
+}
+
+table.editTable th{
+background: #d0effb;
+border-bottom:2px solid #ffffff;
+border-right:1px solid #ffffff;
+vertical-align: top;
+width:210px;
+}
+
+table.editTable td{
+border-bottom:2px solid #ffffff;
+border-right: none;
+background-color:#f6f6f6;
+vertical-align: top;
+}
+
+table.editTable td.min{
+width: 90px;
+}
+
+/* リストテーブル */
+
+table.listTableL{
+border-top:2px solid #8fceed;
+border-left:1px solid #dddddd;
+border-bottom:1px solid #dddddd;
+text-align:left;
+background:#fff;
+}
+
+table.listTableL th{
+background:#e7f6fc;
+border-top:1px dotted #cccccc;
+border-right:1px solid #dddddd;
+border-bottom: none;
+color: #666666;
+vertical-align: middle;
+font-weight:normal;
+/*white-space: nowrap;*/
+padding:7px;
+}
+
+table.listTableL td{
+border-top:1px dotted #dddddd;
+border-right:1px solid #dddddd;
+border-bottom: none;
+vertical-align: top;
+padding:7px;
+}
+
+table.listTableL .emphasis{
+background: #8fceed!important;
+}
+
+table.listTableL .min{
+width: 100px;
+}
+
+table.listTableL .mid{
+width: 200px;
+}
+
+table.listTableL .capCell{
+color: #ffffff;
+font-weight: bold;
+}
+
+table.listTableL td.btn{
+background: #f6f6f6;
+width: 50px;
+text-align: center;
+vertical-align:middle;
+}
+
+table.listTableL td.btn input{
+margin: 0 0 5px 0;
+}
+
+table.listTableL td a{
+font-weight: bold;
+}
+
+table.listTableL td.btnCell{
+background: #f6f6f6;
+text-align: center;
+vertical-align:middle;
+border-top: 1px solid #dddddd;
+}
+
+table.listTableL td.btnCell input{
+cursor: pointer;
+margin: 0 5px;
+}
+
+/* フォトギャラリー
+--------------------------------------*/
+/* 入力 */
+.column {
+width: 160px;
+height:120px;
+margin:10px;
+float: left;
+}
+.photoImage:hover {
+cursor: move;
+opacity: 0.7;
+}
+.photoImage {
+width: 160px;
+height:120px;
+}
+.sImage:hover {
+opacity: 0.7;
+}
+.sImage {
+width: 80px;
+}
+.portlet {
+margin: 0 1em 1em 1em;
+}
+.portlet-header {
+margin: 0.3em;
+padding-bottom: 4px;
+padding-left: 0.2em;
+}
+.portlet-header .ui-icon {
+float: right;
+}
+.portlet-content {
+padding: 0.4em;
+}
+.ui-sortable-placeholder {
+border: 1px dotted black;
+visibility: visible !important;
+width: 155px !important;
+height: 115px !important;
+}
+.ui-sortable-placeholder * {
+visibility: hidden;
+}
+.portletArea {
+width: 900px;
+height: 280px;
+margin: 0 auto;
+padding : 10px 20px;
+}
+div.photoSliderArea {
+border:1px solid #dddddd;
+padding:0 5px 0 5px;
+}
+/* 一覧 */
+table.listTable tbody.sortable td {
+border-bottom: 1px solid #ddd;
+}
+/*
+table.listTable tbody.sortable tr:hover {
+background: #E6E6E6;
+}
+*/
+.cell1 {
+width:20px;
+}
+.sortable .cell1:hover {
+cursor: move;
+}
+.cell2 {
+width:394px;
+}
+.cell3 {
+width:110px;
+}
+.cell4 {
+width:110px;
+}
+.cell5 {
+width:100px;
+}
+.cell6 {
+width:110px;
+}
+.cell7 {
+width:115px;
+}
+.iconGreen {
+background: #9c6;
+color: #fff;
+font-size: 120%;
+line-height: 120%;
+white-space: nowrap;
+padding: 0 6px;
+margin: 0 5px;
+}
+.iconRed {
+background: #ff3b72;
+color: #fff;
+font-size: 120%;
+line-height: 120%;
+white-space: nowrap;
+padding: 0 6px;
+margin: 0 5px;
+}
+.iconBlue {
+background: #8fceed;
+color: #fff;
+font-size: 120%;
+line-height: 120%;
+white-space: nowrap;
+padding: 0 6px;
+margin: 0 5px;
+}
+.iconGrey {
+background: #d5d5d5;
+color: #fff;
+font-size: 120%;
+line-height: 120%;
+white-space: nowrap;
+padding: 0 6px;
+margin: 0 5px;
+}
+.iconReverseBlue {
+background: #fff;
+color: #8fceed;
+border-width: thin;
+border-style: solid;
+font-size: 120%;
+line-height: 180%;
+white-space: nowrap;
+padding: 0 6px;
+margin: 0 5px;
+}
+
+
+.ico {
+background: #696969;
+color: #fff;
+font-size: 85.7%; 
+line-height: 120%;
+display: inline-block;
+padding: 2px 6px;
+margin: 0px 5px;
+}
+
+
+</style>
+<script type="text/javascript" src="../js/lib/jquery.js"></script>
+<script type="text/javascript" src="../js/lib/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-ui/jquery-ui.custom.min.js"></script>
+<script type="text/javascript" src="../js/lib/underscore.js"></script>
+<script type="text/javascript" src="../js/lib/jsdeferred.js"></script>
+<script type="text/javascript" src="../js/lib/jquery-plugins.min.js"></script>
+<script type="text/javascript" src="../js/lib/common.js"></script>
+
+<script type="text/javascript">
+<!--
+
+(function($) {
+	/*
+	 * Description:
+	 * 画像の並び替え処理
+	 *
+	 */
+	$.mynaviImageSort = function() {
+
+		// 画像スライダー
+		var photoSlider = $('.js-photoSlider').mynavislider({
+			'shift' : 5,
+			'shiftw': 430,
+			'easing': 'easeInOutCirc',
+			'carousel' : false,
+			'backBtnKey': '#js-photoSlider-back',
+			'nextBtnKey' : '#js-photoSlider-next',
+			'slideCallBack' : function(data){
+			}
+		});
+
+		// 写真の追加
+		photoSlider.find('li').click(function(e) {
+			e.preventDefault();
+			
+			var self = $(this),
+				photo = self.find('img'),
+				aTag = self.find('a'),
+				imageId = aTag.data('imageid') || '',
+				portletArea = $('.js-portletArea'),
+				publicationEndDate = aTag.data('enddate') || '';
+			
+			// 追加済の場合はなにもしない
+			var filterImageId = 'js-filter'+imageId;
+			if (aTag.prev('div').hasClass(filterImageId)) {
+				return false;
+			}
+			
+			// 画像が10枚以上の場合はなにもしない
+			if (portletArea.find('.column').length >= 10) {
+				alert(Mynavi.constants.message.client_photo_image_maxsize);
+				return false;
+			}
+
+			// 画像
+			var img = photo.clone().removeClass('sImage').addClass('photoImage');
+
+			// sort対象のdiv 透明にしておく
+			var columnDiv =$('<div class="column" data-imageid="'+imageId+'"></div>');
+			columnDiv.append(img);
+			columnDiv.css('opacity', 0);
+			
+			// portletAreaに追加
+			portletArea.append(columnDiv);
+			
+			// ×ボタン追加
+			var closeBtn = $('<a href="#" class="js-close"><img src="../img/btn_move_delete.png" style="position: relative; top: -115px; left: 135px;" width="20" height="20" /></a>');
+			closeBtn.click(closeImage);
+			closeBtn.insertAfter(img);
+			
+			// 選択済みの画像にフィルターを追加する。
+			addFilter();
+			// 画像の並び順を設定
+			setImageIds();
+			
+			// 画像をアニメーションで表示します。
+			columnDiv.animate({'opacity': 1}, 1000, function() {});
+
+		});
+		
+		// 写真の並び替え
+		$('.js-portletArea').sortable({
+			cursor: 'move',
+			opacity: 0.5,
+			update: function(event, ui) {
+				// 画像の並び順を設定
+				setImageIds();
+			}
+		});
+    	$('.js-portletArea').disableSelection();
+    	
+    	// 画像の並び順を設定
+    	function setImageIds() {
+			var result = $('.js-portletArea').sortable('toArray', { attribute: 'data-imageid' } );
+			$('#imageIds').val(result).change();
+    	}
+    	
+    	// ×ボタン
+    	function closeImage(e) {
+			e.preventDefault();
+			var column = $(this).closest('div.column'),
+				imageId = column.data('imageid') || '';
+			// 画像をアニメーションで削除
+			column.animate({'opacity': 0}, 300, function() {
+				column.remove();
+				$('div.js-filter'+imageId).remove();
+				// 画像の並び順を設定
+				setImageIds();
+			});
+    	}
+    	$('.js-close').click(closeImage);
+    	
+    	// 選択済みの画像にフィルターを追加する。
+    	function addFilter() {
+        	$('.column').each(function() {
+        		var imageId = $(this).data('imageid');
+        		$('.sImage').each(function() {
+        			var aTag = $(this).parent('a'),
+        				sImageId = aTag.data('imageid'),
+        				target = aTag.parent('li');
+        			if (imageId === sImageId) {
+        				var filterImageId = 'js-filter'+imageId;
+        				if (!aTag.prev('div').hasClass(filterImageId)) {
+            	    		// 選択済みの画像にフィルターを追加する。
+            	    		$('<div class="'+filterImageId+'" style="position: absolute;width: 80px;height: 60px;background-color: black;opacity: 0.6;"></div>').prependTo(target);
+        				}
+        	    		return false;
+        			}
+        		});
+        	});
+    	}
+    	addFilter();
+	}
+	
+})(jQuery);
+
+$(function(){
+	// フォトギャラリーの並び替え処理
+	$.mynaviImageSort();
+});
+//-->
+</script>
+
+</head>
+<body>
+	<table class="editTable">
+		<tbody>
+		<tr>
+			<th colspan="3" class="capCell">フォトの並び替え</th>
+		</tr>
+		<tr>
+			<td style="border: 1px solid #ddd;">
+			<div class="portletArea js-portletArea ui-sortable" data-imagemaxcnt="30">
+				<div class="column" data-imageid="976575629">
+							<img src="../img/photo/photo1.jpg" class="photoImage" width="160"><a href="#" class="js-close"><img src="http://stg2.wedding.mynavi.jp/img/btn_move_delete.png" style="position: relative; top: -115px; left: 135px;" width="20" height="20"></a>
+						</div>
+					<div class="column" data-imageid="889390040">
+							<img src="../img/photo/photo3.jpg" class="photoImage" width="160"><a href="#" class="js-close"><img src="http://stg2.wedding.mynavi.jp/img/btn_move_delete.png" style="position: relative; top: -115px; left: 135px;" width="20" height="20"></a>
+						</div>
+					</div>
+			</td>
+		</tr>
+		</tbody>
+	</table>
+	<div class="photoSliderArea">
+		<div class="clearfix"></div>
+		<div class="js-photoSlider">
+			<p style="float: left; margin-top: 40px;"><a href="#" id="js-photoSlider-back" style="display: none;"><img src="http://stg2.wedding.mynavi.jp/img/btn_carousel_back_l.png" alt="前へ" width="25px" height="25px"></a></p>
+			<div style="overflow:hidden; width: 450px; float: left; position: relative;" class="slide">
+				<ul style="position: relative; list-style-type: none;">
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="976575629" data-enddate=""><img src="../img/photo/photo1.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="104074339" data-enddate=""><img src="../img/photo/photo2.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="889390040" data-enddate=""><img src="../img/photo/photo3.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="885081412" data-enddate=""><img src="../img/photo/photo4.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="775824561" data-enddate=""><img src="../img/photo/photo5.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="765602417" data-enddate=""><img src="../img/photo/photo6.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="660891885" data-enddate=""><img src="../img/photo/photo7.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="532383440" data-enddate=""><img src="../img/photo/photo8.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="495425737" data-enddate=""><img src="../img/photo/photo8.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="481896459" data-enddate=""><img src="../img/photo/photo9.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="443174902" data-enddate=""><img src="../img/photo/photo10.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="297914068" data-enddate=""><img src="../img/photo/photo11.jpg" class="sImage" width="80"></a>
+						</li>
+					<li style="margin:5px 3px; float: left;">
+							<a href="#" data-imageid="181562968" data-enddate=""><img src="../img/photo/photo12.jpg" class="sImage" width="80"></a>
+						</li>
+					</ul>
+			</div>
+			<p style="float: left; margin-top: 40px;margin-left: 10px"><a href="#" id="js-photoSlider-next" style="display: inline;"><img src="http://stg2.wedding.mynavi.jp/img/btn_carousel_next_l.png" alt="次へ" width="25px" height="25px"></a></p>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+</body>
+</html>
+
+
