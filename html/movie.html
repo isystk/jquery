@@ -11,22 +11,23 @@
 <link href="../js/lib/jquery-ui/jquery-ui.custom.css" rel="stylesheet" type="text/css" media="all" />
 <style type="text/css">
 <!--
-video::-webkit-media-controls-enclosure {
-    overflow:hidden;
+video.movie::-webkit-media-controls-enclosure {
+overflow:hidden;
 }
 
-video::-webkit-media-controls-panel {
-    width: calc(100% + 30px); /* Adjust as needed */
+video.movie::-webkit-media-controls-panel {
+width: calc(100% + 30px); /* Adjust as needed */
 }
-.play {
+.movieBox .play {
 position: relative;
 top: -150px;
 left: 40px;
 opacity: 0.9;
 background-image: url("../img/image_play.png");
 background-repeat: no-repeat;
+height:100%;
 }
-.video:hover {
+.movieBox.js-movie-play:hover {
 opacity: 0.7;
 }
 -->
@@ -46,7 +47,7 @@ $(function() {
 	var currentTime = 0;  // 動画の再生時間
 
 	// 動画サムネイルをクリックした際に動画に差し替える。
-	$('.js-play-movie').click(function(e) {
+	$('.js-movie-play').click(function(e) {
 		e.preventDefault();
 		var self = $(this),
 			moviePath = self.data('movie') || '',
@@ -235,9 +236,9 @@ $(function() {
 <body>
 	<article>
 		<div class="viewArea">
-			<div class="js-play-movie video" data-movie="../movie/movie1.mp4" style="height:135px;" >
+			<div class="movieBox js-movie-play " data-movie="../movie/movie1.mp4" style="width:240px;height:135px;" >
 				<img src="../img/photo/movie1.jpg" width="240px" >
-				<div class="play" style="height:135px" ></div>
+				<div class="play"></div>
 			</div>
 			<div id="telop"></div>
 		</div>
