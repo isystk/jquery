@@ -20,12 +20,15 @@ width: calc(100% + 30px); /* Adjust as needed */
 }
 .movieBox .play {
 position: relative;
-top: -150px;
-left: 40px;
+top: -100px;
+left: 90px;
 opacity: 0.9;
-background-image: url("../img/image_play.png");
+background-image: url("../img/ico_play.png");
 background-repeat: no-repeat;
-height:100%;
+background-size: contain;
+}
+.movieBox.js-movie-play .play:hover {
+background-image: url("../img/ico_play_hover.png");
 }
 .movieBox.js-movie-play:hover {
 opacity: 0.7;
@@ -238,7 +241,7 @@ $(function() {
 		<div class="viewArea">
 			<div class="movieBox js-movie-play " data-movie="../movie/movie1.mp4" style="width:240px;height:135px;" >
 				<img src="../img/photo/movie1.jpg" width="240px" >
-				<div class="play"></div>
+				<div class="play" style="width:50%;height:50%;"></div>
 			</div>
 			<div id="telop"></div>
 		</div>
