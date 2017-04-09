@@ -20,8 +20,6 @@ width: calc(100% + 30px); /* Adjust as needed */
 }
 .movieBox .play {
 position: relative;
-top: -100px;
-left: 90px;
 opacity: 0.9;
 background-image: url("../img/ico_play.png");
 background-repeat: no-repeat;
@@ -125,6 +123,7 @@ $(function() {
 		// テキストエリア内のデータが更新されたらテロップデータを反映する
 		$(document).on("keypress", "#telopCommand", function(e) {
 			var self = $(this);
+			var myVideo = $("video.movie")[0];
 			if (e.keyCode == 13) {
 				var data = {};
 				data.id = 't'+ telopData.length;
@@ -239,9 +238,9 @@ $(function() {
 <body>
 	<article>
 		<div class="viewArea">
-			<div class="movieBox js-movie-play " data-movie="../movie/movie1.mp4" style="width:240px;height:135px;" >
-				<img src="../img/photo/movie1.jpg" width="240px" >
-				<div class="play" style="width:50%;height:50%;"></div>
+			<div class="movieBox js-movie-play " data-movie="../movie/movie1.mp4" style="width:480px;height:270px;" >
+				<img src="../img/photo/movie1.jpg" width="480px" >
+				<div class="play" style="width:50%;height:50%;top: -200px;left: 180px;"></div>
 			</div>
 			<div id="telop"></div>
 		</div>
