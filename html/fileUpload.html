@@ -45,45 +45,48 @@ $(function(){
 	};
 	// 画像ファイルのアップロード
 	var fileUpload = function (file) {
-		var url = encodeURI('/client/album/list/imageUpload/');
-		// 60秒以内にレスポンスがない場合は、タイムアウトメッセージを表示する。
-		var timer = setTimeout( function() {
-			var errors = [];
-			errors.push('タイムアウトが発生しました。');
-			showErrorMsg(errors);
-			// 「ファイル選択」ボタンを活性に戻す。
-			$('#imageFileSelectBtn').removeAttr('disabled');
-			return false;
-		}, 60000);
-		$(file).upload(url, {imageId: $("#imageId").val()}, function(res) {
-			clearInterval(timer);
-			// 「ファイル選択」ボタンを活性に戻す。
-			$('#imageFileSelectBtn').removeAttr('disabled');
-			// エラー処理
-			$('#errorsArea').empty();
-			$('input','select').removeClass('error');
-			if (res.errors) {
-				showErrorMsg(res.errors);
-				return false;
-			}
-			$("#imageId").val(res.imageId);
-			$("#imagePath").val(res.imagePath);
-
-			// 画像をアニメーション（フェードイン）で表示します。
-			var uploadImage = $('#uploadImage');
-			var src = res.imageFullpath + '?time=' + new Date().getTime();
-			$('<img src="'+src+'" />').load(function(){
-				uploadImage.animate({'opacity': 0 }, 300, function() {
-					uploadImage.attr('src', src).animate({'opacity': 1}, 300);
-				});
-			});
-
-			// 画像が設定されていない場合は、登録ボタンを押させない
-			$('.require').change();
-		}, 'json');
 
 		// アップロード中は、「ファイル選択」ボタンを非活性にする。
 		$('#imageFileSelectBtn').attr('disabled', 'disabled');
+
+		$.mynaviUpload({
+			uploadUrl: '/client/album/list/imageUpload/',
+			maxFileSize: 300000,
+			successCallback : function(res) {
+
+				// 「ファイル選択」ボタンを活性に戻す。
+				$('#imageFileSelectBtn').removeAttr('disabled');
+				// エラー処理
+				$('#errorsArea').empty();
+				$('input','select').removeClass('error');
+				if (res.errors) {
+					showErrorMsg(res.errors);
+					return false;
+				}
+				$("#imageId").val(res.imageId);
+				$("#imagePath").val(res.imagePath);
+
+				// 画像をアニメーション（フェードイン）で表示します。
+				var uploadImage = $('#uploadImage');
+				var src = res.imageFullpath + '?time=' + new Date().getTime();
+				$('<img src="'+src+'" />').load(function(){
+					uploadImage.animate({'opacity': 0 }, 300, function() {
+						uploadImage.attr('src', src).animate({'opacity': 1}, 300);
+					});
+				});
+
+				// 画像が設定されていない場合は、登録ボタンを押させない
+				$('.require').change();
+			},
+			errorsCallback : function(errors) {
+				var divs = _.map(errors, function(error) {
+					return '<p class=\'errortxt\'>'+error+'</p>';
+				});
+				$('#errorsArea').empty().append('<div class=\'alertBox\'>' + divs.join('') + '</div>');
+			}
+			
+	    }).fileUpload(file);
+
 	};
 
 	// 画像ファイル選択時

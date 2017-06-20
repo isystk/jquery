@@ -1,5 +1,4 @@
 ﻿
-
 (function($) {
 	/*
 	 * mynaviMovie
@@ -23,7 +22,6 @@
 				isPlay = obj.hasClass('play'),
 				imagePath = obj.attr('osrc') || obj.attr('src') || '',
 				video = null,
-				isWideFull = (width === $(window).width()),
 				nowPlaying = false,
 				sendGaPlayStart = false,
 				sendGaPlayEnd = false;
@@ -31,7 +29,7 @@
 			var movieBox = $(['<div class="movieBox" >',
 				'<div class="playBtn"></div>',
 				'<div class="playTime display-none"><span>'+playTime+'</span></div>',
-				'</div>',
+				'</div>'
 			].join(''));
 
 			var copyImage = obj.clone(true);
@@ -135,35 +133,7 @@
 					callback();
 				}
 			}
-
-			var restore = function() {
-				var img = movieBox.find('.movie').clone(true);
-				movieBox.after(img);
-				movieBox.remove();
-				return img;
-			}
 			
-			// 画面が回転された場合
-			$(this).on('orientationchange',function(){
-				pauseVideo(video);
-				if (video && isWideFull) {
-					video.width($(window).width());
-				} else {
-					var img = restore();
-					init(img);
-				}
-			});
-			// 画面がリサイズされた場合
-			$(this).resize(function() {
-				pauseVideo(video);
-				if (video && isWideFull) {
-					video.width($(window).width());
-				} else {
-					var img = restore();
-					init(img);
-				}
-			});
-
 			// 動画を再生します。
 			var playVideo = $.fn.mynaviMovie.playVideo = function (video) {
 				if (nowPlaying) {
@@ -185,17 +155,34 @@
 			// imgタグをvidoタグに置き換える
 			var changeVideo = $.fn.mynaviMovie.changeVideo = function (target, imagePath) {
 				var self = target,
-					width = self.width();
+					image = self.find('img.movie'),
+					width = image.attr('width');
 
 				var movieDir = imagePath.substring(0, imagePath.lastIndexOf('/')+1).replace( /thumb/g , 'movie');
 				var movieFile = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/([0-9]*)(.*).jpg(.*)/, '$1.mp4$3');
 				var moviePath = movieDir + movieFile;
 				
-				var video = $(['<video class="movie" muted controls="" width="'+width+'" poster="'+imagePath+'" >',
+				var video = $(['<video class="movie" controls="" poster="'+imagePath+'" >',
 						'<source src="'+moviePath+'">',
 						'<p>ご利用のブラウザではvideoが利用できません。別ブラウザをご利用下さい</p>',
 					'</video>'].join(''));
+				
+				// 初期音量をMUTEにするかどうか
+				if (params.muteDefault) {
+					video.attr('muted', 'muted');
+				}
+				
+				if (width) {
+					width = width.replace('px', '');
+					video.css('width', width + 'px');
+				}
 
+				var clazz = image.attr('class');
+				if (clazz) {
+					video.addClass(clazz);
+				}
+				
+				
 				self.after(video);
 				self.remove();
 
@@ -264,9 +251,9 @@
 				})();
 
 				// ミニファイされるSTG環境だとCSSに記述しても効かなくなるので、JSでスタイル追加しました。
-				if (!$.fn.mynaviMovie.addStyleCmp) {
+				if (params.hideDownload && !$.fn.mynaviMovie.addStyleCmp) {
 					var style = addStyle();
-					style.addCSS('video.movie::-webkit-media-controls-panel', 'width', 'calc(100% + 30px)');
+					style.addCSS('video.movie::-webkit-media-controls-panel', 'width', 'calc(100% + 31px)');
 					style.addCSS('video.movie::-webkit-media-controls-enclosure', 'overflow', 'hidden');
 					$.fn.mynaviMovie.addStyleCmp = true;
 				}
@@ -286,6 +273,21 @@
 			});
 		});
 
+		// 画面が回転された場合
+		var restore = function(target) {
+			var movieBox = target.closest('.movieBox');
+			var img = target.clone(true);
+			movieBox.after(img);
+			movieBox.remove();
+			return img;
+		}
+		$(window).on('orientationchange resize', function(){
+			$('img.movie').each(function() {
+				var img = restore($(this));
+				init(img);
+			});
+		});
+
 		return this;
 	}
 	
@@ -294,6 +296,8 @@
 		playCallback : null,
 		pauseCallback : null,
 		endedCallback : null,
+		muteDefault : false, // 動画再生時の初期音量をMUTEにするかどうか
+		hideDownload : true, // ダウンロードボタンを非表示とするかどうか
 		clickPlay : true, // videoタグクリック時に動画再生・停止を制御する。
 		zoomStart : false, // 拡大表示した状態で再生するかどうか
 		sendGa : false // 再生開始、再生終了時にGA送信するかどうか
