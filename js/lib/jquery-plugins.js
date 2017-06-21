@@ -2901,8 +2901,8 @@ $.globalMenuNavi.load = function() {
 					image = self.find('img.movie'),
 					width = image.attr('width');
 
-				var movieDir = imagePath.substring(0, imagePath.lastIndexOf('/')+1).replace( /thumb/g , 'movie');
-				var movieFile = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/([0-9]*)(.*).jpg(.*)/, '$1.mp4$3');
+				var movieDir = imagePath.substring(0, imagePath.lastIndexOf('/')+1);
+				var movieFile = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/(.*).jpg(.*)/, '$1.mp4$2');
 				var moviePath = movieDir + movieFile;
 				
 				var video = $(['<video class="movie" controls="" poster="'+imagePath+'" >',
