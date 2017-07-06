@@ -2741,6 +2741,330 @@ $.globalMenuNavi.load = function() {
 }
 
 })(jQuery);
+﻿
+(function($) {
+	/*
+	 * mynaviMovie
+	 *
+	 * Copyright (c) 2017 iseyoshitaka at teamLab
+	 *
+	 * Description:
+	 * 動画の表示処理
+	 *
+	 */
+	$.fn.mynaviMovie = function(options, callbackfunc) {
+	
+		$.fn.mynaviMovie.addStyleCmp = false;
+		
+		var params = $.extend({}, $.fn.mynaviMovie.defaults, options);
+
+		var init = function(obj, callback) {
+			var width = obj.outerWidth() || 0,
+				height = obj.outerHeight() || 0,
+				playTime = obj.data('playtime') || '',
+				isPlay = obj.hasClass('play'),
+				imagePath = obj.attr('osrc') || obj.attr('src') || '',
+				video = null,
+				nowPlaying = false,
+				sendGaPlayStart = false,
+				sendGaPlayEnd = false;
+
+			var movieBox = $(['<div class="movieBox" >',
+				'<div class="playBtn"></div>',
+				'<div class="playTime display-none"><span>'+playTime+'</span></div>',
+				'</div>'
+			].join(''));
+
+			var copyImage = obj.clone(true);
+			movieBox.prepend(copyImage);
+			
+			if (playTime !== '') {
+				movieBox.find('.playTime').removeClass('display-none');
+			}
+
+			if (isPlay) {
+				movieBox.addClass('play');
+				// 動画サムネイルをクリックした際に動画に差し替える。
+				movieBox.bind("click", function(e) {
+					e.preventDefault();
+					video = changeVideo($(this), imagePath);
+					
+					// GAイベントトラッキング
+					if (params.sendGa && !sendGaPlayStart) {
+						var sendGa = video.closest('.sendGa'),
+							gaaction = sendGa.data('gaaction'),
+							movieUrl = 'http:' + sendGa.find('source').attr('src'),
+							galabel = sendGa.data('galabel');
+						$.gaTrackEvent({category: '動画再生', action: gaaction, label: movieUrl + '-' + galabel});
+						sendGaPlayStart = true;
+					}
+
+				});
+			}
+
+			obj.after(movieBox);
+			obj.removeClass('movie');
+			obj.remove();
+			
+			if (width !== 0 && height === 0) {
+				// 表示サイズの調整
+				var img = $('<img>');
+				img
+					.load(function() {
+						var o_width = img[0].width;
+						var o_height = img[0].height;
+
+						// アスペクト比からheightを算出
+						height = Math.floor(o_height * width / o_width);
+						setPartsPosition(width, height);
+					});
+				img.attr('src', imagePath);
+			} else if (width === 0 && height !== 0) {
+				// 表示サイズの調整
+				var img = $('<img>');
+				img
+					.load(function() {
+						var o_width = img[0].width;
+						var o_height = img[0].height;
+
+						// アスペクト比からwidthを算出
+						width = Math.floor(o_width * o_height / height);
+						setPartsPosition(width, height);
+					});
+				img.attr('src', imagePath);
+			} else if (width === 0 || height === 0) {
+				// 表示サイズの調整
+				var img = $('<img>');
+				img
+					.load(function() {
+						var o_width = img[0].width;
+						var o_height = img[0].height;
+
+						setPartsPosition(o_width, o_height);
+					});
+				img.attr('src', imagePath);
+			} else {
+				setPartsPosition(width, height);
+			}
+
+			function setPartsPosition(w, h) {
+				var playBtnWidth = 0;
+				var playBtnHeight = 0;
+				if (width < height) {
+					// 縦長の場合
+					playBtnWidth = Math.floor(w * 0.3);
+					playBtnHeight = Math.floor(w * 0.3);
+				} else {
+					// 横長の場合
+					playBtnWidth = Math.floor(h * 0.3);
+					playBtnHeight = Math.floor(h * 0.3);
+				}
+				
+				var playBtnTop = Math.floor((h * 0.5) - (playBtnHeight * 0.5));
+				var playBtnLeft = Math.floor((w * 0.5) - (playBtnWidth * 0.5));
+				var playTimeFontSize = Math.floor(playBtnWidth * 0.3);
+				if (20 < playTimeFontSize) {
+					playTimeFontSize = 20;
+				}
+				var playTimeTop = Math.floor(h - 15 - playTimeFontSize);
+
+				movieBox.css('width', w + 'px').css('height', h + 'px');
+				movieBox.find('.playBtn').css('top', playBtnTop + 'px').css('left', playBtnLeft + 'px');
+				movieBox.find('.playTime').css('top', playTimeTop + 'px').css('font-size', playTimeFontSize + 'px');
+
+				if (callback) {
+					callback();
+				}
+			}
+			
+			// 動画を再生します。
+			var playVideo = $.fn.mynaviMovie.playVideo = function (video) {
+				if (nowPlaying) {
+					return;
+				}
+				video[0].play();
+				nowPlaying = true;
+			}
+
+			// 動画を停止します。
+			var pauseVideo = $.fn.mynaviMovie.pauseVideo = function (video) {
+				if (!nowPlaying) {
+					return;
+				}
+				video[0].pause();
+				nowPlaying = false;
+			}
+			
+			// imgタグをvidoタグに置き換える
+			var changeVideo = $.fn.mynaviMovie.changeVideo = function (target, imagePath) {
+				var self = target,
+					image = self.find('img.movie'),
+					width = image.attr('width');
+
+				var movieDir = imagePath.substring(0, imagePath.lastIndexOf('/')+1);
+				var movieFile = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/(.*).jpg(.*)/, '$1.mp4$2');
+				var moviePath = movieDir + movieFile;
+				
+				var video = $(['<video class="movie" controls="" poster="'+imagePath+'" >',
+						'<source src="'+moviePath+'">',
+						'<p>ご利用のブラウザではvideoが利用できません。別ブラウザをご利用下さい</p>',
+					'</video>'].join(''));
+				
+				// 初期音量をMUTEにするかどうか
+				if (params.muteDefault) {
+					video.attr('muted', 'muted');
+				}
+				
+				if (width) {
+					width = width.replace('px', '');
+					video.css('width', width + 'px');
+				}
+
+				var clazz = image.attr('class');
+				if (clazz) {
+					video.addClass(clazz);
+				}
+				
+				
+				self.after(video);
+				self.remove();
+
+				if (params.clickCallback) {
+					params.clickCallback({target: movieBox});
+				}
+				
+				(function() {
+					
+					if (params.clickPlay) {
+						video.click(function(e) {
+							e.preventDefault();
+							if (!nowPlaying) {
+								playVideo(video);
+							} else {
+								pauseVideo(video);
+							}
+						});
+					}
+
+					// 動画が再生開始された時
+					video[0].addEventListener("play", function(){
+						if (params.playCallback) {
+							params.playCallback();
+						}
+					}, true);
+
+					// 動画が停止された時
+					video[0].addEventListener("pause", function(){
+						if (params.pauseCallback) {
+							params.pauseCallback();
+						}
+					}, true);
+
+					// 動画が再生完了した時
+					video[0].addEventListener("ended", function(){
+
+						// GAイベントトラッキング
+						if (params.sendGa && !sendGaPlayEnd) {
+							var sendGa = video.closest('.sendGa'),
+								gaaction = sendGa.data('gaaction'),
+								movieUrl = 'http:' + sendGa.find('source').attr('src'),
+								galabel = sendGa.data('galabel');
+							$.gaTrackEvent({category: '動画再生完了', action: gaaction, label: movieUrl + '-' + galabel});
+							sendGaPlayEnd = true;
+						}
+
+						if (params.endedCallback) {
+							params.endedCallback();
+						}
+					}, true);
+					
+					playVideo(video);
+
+					// 初期表示をフルスクリーンにするかどうか
+					if (params.zoomStart) {
+						if (!!video[0].requestFullScreen) {
+							video[0].requestFullScreen();
+						} else if (!!video[0].webkitRequestFullScreen) {
+							video[0].webkitRequestFullScreen();
+						} else if (!!video[0].webkitEnterFullscreen) {
+							video[0].webkitEnterFullscreen();
+						}
+					}
+					
+				})();
+
+				// ミニファイされるSTG環境だとCSSに記述しても効かなくなるので、JSでスタイル追加しました。
+				if (params.hideDownload && !$.fn.mynaviMovie.addStyleCmp) {
+					var style = addStyle();
+					style.addCSS('video.movie::-webkit-media-controls-panel', 'width', 'calc(100% + 31px)');
+					style.addCSS('video.movie::-webkit-media-controls-enclosure', 'overflow', 'hidden');
+					$.fn.mynaviMovie.addStyleCmp = true;
+				}
+
+				return video;
+			};
+
+		};
+
+		var maxCount = $(this).length;
+		$(this).each(function() {
+			init($(this), function() {
+				maxCount--;
+				if (maxCount === 0 && callbackfunc) {
+					callbackfunc();
+				}
+			});
+		});
+
+		// 画面が回転された場合
+		var restore = function(target) {
+			var movieBox = target.closest('.movieBox');
+			var img = target.clone(true);
+			movieBox.after(img);
+			movieBox.remove();
+			return img;
+		}
+		$(window).on('orientationchange resize', function(){
+			$('img.movie').each(function() {
+				var img = restore($(this));
+				init(img);
+			});
+		});
+
+		return this;
+	}
+	
+	$.fn.mynaviMovie.defaults = {
+		clickCallback : null,
+		playCallback : null,
+		pauseCallback : null,
+		endedCallback : null,
+		muteDefault : false, // 動画再生時の初期音量をMUTEにするかどうか
+		hideDownload : true, // ダウンロードボタンを非表示とするかどうか
+		clickPlay : true, // videoタグクリック時に動画再生・停止を制御する。
+		zoomStart : false, // 拡大表示した状態で再生するかどうか
+		sendGa : false // 再生開始、再生終了時にGA送信するかどうか
+	}
+
+	function addStyle() {
+		var style = document.createElement('style');
+		style.setAttribute('type', 'text/css');
+		document.getElementsByTagName('head')[0].appendChild(style);
+		var sheet = document.styleSheets[0];
+		if (sheet.insertRule) {
+			sheet.addCSS = function(selector, property, value) {
+				var cssRulesIndex = (sheet.cssRules) ? sheet.cssRules.length : 0;
+				sheet.insertRule(selector + '{' + property + ':' + value + ';}', cssRulesIndex);
+			};
+		} else {
+			sheet.addCSS = function(selector, property, value) {
+				sheet.addRule(selector, property + ':' + value);
+			};
+		}
+		return sheet;
+	}
+	
+})(jQuery);
 (function($){
 /*
  * openDialog
@@ -2863,7 +3187,8 @@ Dialog.prototype = {
 			,	reboundw = null
 			,	moment = false
 			,	isFullScreen = false
-			,	heightMaxScreen = false;
+			,	heightMaxScreen = false
+			,	diffMoveMode = false; // 通常はページ番号の差分で移動距離を算出しますが、このモードがtrueの場合は間の子要素の数で移動距離を算出します。
 
 		var params = $.extend({}, $.fn.mynavislider.defaults, options);
 
@@ -2891,6 +3216,10 @@ Dialog.prototype = {
 			heightMaxScreen = params.heightMaxScreen;
 			slideCallBackFunc = params.slideCallBack;
 			resizeCallBackFunc = params.resizeCallBack;
+
+			ul.find(childKey).each(function(i) {
+				$(this).attr('pageno', (i+1));
+			});
 
 			if (heightMaxScreen) {
 				// 画像縦幅を端末サイズに合わせる為オリジナル画像サイズが必要になる。画像を事前にロードしておく。
@@ -2939,6 +3268,22 @@ Dialog.prototype = {
 					isMouseDrag = false;
 				}
 
+				if (carousel) {
+					// カルーセルの初期設定を行う
+					initCarousel();
+					pos = li.size()/2;
+				} else {
+					// ページングボタンの表示制御
+					showArrows();
+					pos = shift;
+				}
+
+				// ulタグの横幅を調整する
+				ul.css('width', shiftw * li.size() / shift)
+					.css('position', 'relative');
+
+				li.css('float', 'left');
+
 				// 各種イベントの設定
 				bindEvent();
 				
@@ -2962,22 +3307,6 @@ Dialog.prototype = {
 
 		// 各種イベントの設定
 		var bindEvent = function() {
-
-			if (carousel) {
-				// カルーセルの初期設定を行う
-				initCarousel();
-				pos = li.size()/2;
-			} else {
-				// ページングボタンの表示制御
-				showArrows();
-				pos = shift;
-			}
-
-			// ulタグの横幅を調整する
-			ul.css('width', shiftw * li.size() / shift)
-				.css('position', 'relative');
-
-			li.css('float', 'left');
 
 			// スワイプでのページングを可能にする
 			if (isMouseDrag) {
@@ -3030,11 +3359,19 @@ Dialog.prototype = {
 			pos = pos + (shift * move);
 
 			// ページ番号を設定
-			pageNo = pageNo + move;
-			if (pageNo < 1) {
-				pageNo = pageNo + maxPageNo;
-			} else if (maxPageNo < pageNo) {
-				pageNo = pageNo - maxPageNo;
+			if (diffMoveMode) {
+				if (carousel) {
+					pageNo = parseInt($(li[pos]).attr('pageno'));
+				} else {
+					pageNo = parseInt($(li[(pos-shift)]).attr('pageno'));
+				}
+			} else {
+				pageNo = pageNo + move;
+				if (pageNo < 1) {
+					pageNo = pageNo + maxPageNo;
+				} else if (maxPageNo < pageNo) {
+					pageNo = pageNo - maxPageNo;
+				}
 			}
 
 			// ページングボタンの表示制御
@@ -3426,24 +3763,8 @@ Dialog.prototype = {
 
 		// 子要素をフルスクリーンで表示します。
 		var fullScreen = function() {
-			// スライダーで設定した変更を元に戻します。
-			var unbindSlider = function() {
-				// オートスライドのマイマーをリセット
-				if (autoSlide) {
-					autoSlide.stop();
-				}
-				// クリック時のバインドをリセット
-				back.unbind();
-				next.unbind();
-				// スワイプのイベントをリセット
-				ul.unbind();
-				// ローテート用の番兵を削除
-				ul.find(childKey + '.cloned').remove();
-				// liを再キャッシュ
-				li = ul.find(childKey);
-			};
-			// スライダーを生成し直します。
-			var createSlider = function() {
+			// スライダーの表示幅を調整します。
+			var changeDisplay = function() {
 				
 				// 子要素の横幅を端末のwidthに設定
 				ul.find(childKey).width(Math.ceil($(window).width() /dispCount) - Math.ceil(margin/dispCount));
@@ -3467,7 +3788,10 @@ Dialog.prototype = {
 				
 				liwidth = ul.find(childKey).width();
 				shiftw = (liwidth + margin) * shift;
+				ul.css('width', shiftw * li.size() / shift);
 
+				pos = li.size()/2;
+				ul.css('left', '-' + (liwidth*(li.size())) + 'px');
 			};
 			var resizeCallBack = function() {
 				if (resizeCallBackFunc) {
@@ -3484,9 +3808,7 @@ Dialog.prototype = {
 			};
 			// 画面が回転された場合
 			$(this).on('orientationchange',function(){
-				unbindSlider();
-				createSlider();
-				bindEvent();
+				changeDisplay();
 
 				// リサイズ時は、コールバックは呼ばない。
 				var workPageNo = pageNo;
@@ -3500,9 +3822,7 @@ Dialog.prototype = {
 			});
 			// 画面がリサイズされた場合
 			$(this).resize(function() {
-				unbindSlider();
-				createSlider();
-				bindEvent();
+				changeDisplay();
 
 				// リサイズ時は、コールバックは呼ばない。
 				var workPageNo = pageNo;
@@ -3514,7 +3834,7 @@ Dialog.prototype = {
 
 				resizeCallBack();
 			});
-			createSlider();
+			changeDisplay();
 		};
 
 		// コールバック
@@ -3764,36 +4084,71 @@ Dialog.prototype = {
 				autoSlide.restart();
 			}
 			// 移動するページ量
-			var move = page - pageNo;
-			if (Math.abs(page + (maxPageNo-pageNo)) < Math.abs(move)) {
-				move = page + (maxPageNo-pageNo);
+			var move = 0;
+			if (diffMoveMode) {
+				if (page !== pageNo) {
+					var moveR = (ul.find(params.childKey+'[pageno="'+pageNo+'"]:eq(0)').nextUntil(ul.find(params.childKey+'[pageno="'+page+'"]:eq(0)')).length+1);
+					var moveL = -1 * (ul.find(params.childKey+'[pageno="'+page+'"]:eq(0)').nextUntil(ul.find(params.childKey+'[pageno="'+pageNo+'"]:eq(0)')).length+1);
+					if (Math.abs(moveR) < Math.abs(moveL)) {
+						move = moveR;
+					} else {
+						move = moveL;
+					}
+				}
+			} else {
+				move = page - pageNo;
 			}
 			slide(move, animateType);
 		}
 
 		// 最大ページなどの情報をリフレッシュする。（スライドコールバックで次ページ要素をAjax取得してLIに追加した場合などはこれを利用してページ情報を最新化する）
 		// 引数：現在ページ、最大ページ、現在ページの左に追加した要素数
-		var refresh = this.refresh = function (page, _maxPageNo, leftAddCnt) {
-			// LIをリキャッシュ
+		var refresh = this.refresh = function (page, max, leftAddCnt) {
+			// 子要素をリキャッシュ
 			li = ul.find(params.childKey);
+			if (li.size() === 1) {
+				// スライド幅＝子要素横幅✕１ページに表示する子要素の数
+				liwidth = li.width();
+				shiftw = liwidth * shift;
+			}
+			// 親要素のwidthを再計算
 			ul.width(ul.width()+(li.size() * liwidth) + 'px');
 			if (carousel) {
-				maxPageNo = parseInt(_maxPageNo) || Math.ceil(li.size()/2/shift);
-
-				pos = pos + leftAddCnt;
-				ul.css('left', '-' + (pos * liwidth) + 'px');
-
-				// リサイズ時は、コールバックは呼ばない。
-				var workSlideCallBackFunc = slideCallBackFunc;
-				slideCallBackFunc = null;
-				changePage(page);
-				slideCallBackFunc = workSlideCallBackFunc;
-
+				diffMoveMode = true;
+				if (max) {
+					maxPageNo = parseInt(max);
+				} else{
+					maxPageNo = Math.ceil(li.size()/2/shift);
+				}
+				if (leftAddCnt) {
+					pos = pos + leftAddCnt;
+					ul.css('left', '-' + (pos * liwidth) + 'px');
+				}
+				if (page) {
+					// コールバックは一次的に呼ばない。
+					var workSlideCallBackFunc = slideCallBackFunc;
+					slideCallBackFunc = null;
+					changePage(page);
+					slideCallBackFunc = workSlideCallBackFunc;
+				}
 			} else {
-				maxPageNo = parseInt(_maxPageNo) || Math.ceil(li.size()/shift);
+				if (max) {
+					maxPageNo = parseInt(max);
+				} else{
+					maxPageNo = Math.ceil(li.size()/shift);
+				}
 				showArrows();
 			}
 		};
+
+		// ボタンクリックやスワイプ時の処理を一次的に停止/開始する。
+		var suspend = this.suspend = function(suspendFlg) {
+			if (!suspendFlg) {
+				nowLoading = false;
+			} else {
+				nowLoading = true;
+			}
+		}
 
 		// 処理開始
 		$(this).each(function() {
@@ -5223,18 +5578,167 @@ $.popupMessage = function(opts) {
 
 })(jQuery);
 
-/*
- * jQuery.upload v1.0.2
- *
- * Copyright (c) 2010 lagos
- * Dual licensed under the MIT and GPL licenses.
- *
- * http://lagoscript.org
- */
-(function(b){function m(e){return b.map(n(e),function(d){return'<input type="hidden" name="'+d.name+'" value="'+d.value+'"/>'}).join("")}function n(e){function d(c,f){a.push({name:c,value:f})}if(b.isArray(e))return e;var a=[];if(typeof e==="object")b.each(e,function(c){b.isArray(this)?b.each(this,function(){d(c,this)}):d(c,b.isFunction(this)?this():this)});else typeof e==="string"&&b.each(e.split("&"),function(){var c=b.map(this.split("="),function(f){return decodeURIComponent(f.replace(/\+/g," "))});
-d(c[0],c[1])});return a}function o(e,d){var a;a=b(e).contents().get(0);if(b.isXMLDoc(a)||a.XMLDocument)return a.XMLDocument||a;a=b(a).find("body").html();switch(d){case "xml":a=a;if(window.DOMParser)a=(new DOMParser).parseFromString(a,"application/xml");else{var c=new ActiveXObject("Microsoft.XMLDOM");c.async=false;c.loadXML(a);a=c}break;case "json":a=window.eval("("+a+")");break}return a}var p=0;b.fn.upload=function(e,d,a,c){var f=this,g,j,h;h="jquery_upload"+ ++p;var k=b('<iframe name="'+h+'" style="position:absolute;top:-9999px" />').appendTo("body"),
-i='<form target="'+h+'" method="post" enctype="multipart/form-data" />';if(b.isFunction(d)){c=a;a=d;d={}}j=b("input:checkbox",this);h=b("input:checked",this);i=f.wrapAll(i).parent("form").attr("action",e);j.removeAttr("checked");h.attr("checked",true);g=(g=m(d))?b(g).appendTo(i):null;i.submit(function(){k.load(function(){var l=o(this,c),q=b("input:checked",f);i.after(f).remove();j.removeAttr("checked");q.attr("checked",true);g&&g.remove();setTimeout(function(){k.remove();c==="script"&&b.globalEval(l);
-a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
+
+(function($) {
+	/*
+	 * mynaviUpload
+	 *
+	 * Copyright (c) 2017 iseyoshitaka at teamLab
+	 *
+	 * Description:
+	 * �t�@�C���񓯊��A�b�v���[�_�[
+	 *
+	 */
+	$.mynaviUpload = function(options) {
+	
+		var params = $.extend({}, $.mynaviUpload.defaults, options);
+
+		var init = function(files) {
+
+			var uploadUrl = params.uploadUrl;
+			var contentType = params.contentType;
+			var maxFileSize = params.maxFileSize;
+			var successCallback = params.successCallback;
+			var errorsCallback = params.errorsCallback;
+			
+			// �摜URL����t�@�C�����A�b�v���[�h
+			this.imageUrlUpload = function(imagePath, imageId) {
+				// �摜�����[�h
+				var img = $('<img>');
+				img
+					.load(function() {
+						var o_width = img[0].width;
+						var o_height = img[0].height;
+						
+						// canvas�ɏ����o��
+						var canvas = document.createElement('canvas');
+						canvas.width  = o_width;
+						canvas.height = o_height;
+						var ctx = canvas.getContext('2d');
+						ctx.drawImage(img[0], 0, 0);
+						var base64 = canvas.toDataURL(contentType);
+						
+						// Base64����o�C�i���֕ϊ�
+						var bin = atob(base64.replace(/^.*,/, ''));
+						
+						// �o�C�i������Blob �֕ϊ�
+						var buffer = new Uint8Array(bin.length);
+						for (var i = 0; i < bin.length; i++) {
+						  buffer[i] = bin.charCodeAt(i);
+						}
+						var blob = new Blob([buffer.buffer], {type: contentType});
+						blob.name = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/(.*)\.(.*)\?(.*)$/, '$1.$2');
+						blob.imageId = imageId;
+						var files = [blob];
+						var obj = {files : files};
+						
+						// �t�@�C��API�ɑΉ����Ă���ꍇ�́A�摜�`�F�b�N�ƃT�C�Y�`�F�b�N���N���C�A���g���ł��s���B
+						if (window.File && window.FileReader && window.FileList && window.Blob){
+							for(var i=0,len=files.length; i<len; i++){
+								var file = files[i];
+								var errors = [];
+								
+								// �摜�t�@�C���`�F�b�N
+								if( !file.type.match("image.*") ){
+									errors.push('�摜�t�@�C�����s���ł��B');
+								}
+								// �t�@�C���T�C�Y�`�F�b�N
+								if( maxFileSize && maxFileSize <= file.size ){
+									errors.push('�摜�t�@�C���̃t�@�C���T�C�Y���ő�l('+ maxFileSize +'�o�C�g)�𒴂��Ă��܂��B');
+								}
+
+								if (0 < errors.length) {
+									if (errorsCallback) {
+										errorsCallback(errors);
+									}
+
+									return false;
+								}
+							}
+						}
+						
+						fileUpload(obj);
+					});
+				img.attr('src', imagePath);
+			};
+			
+			// �t�@�C���̃A�b�v���[�h
+			var fileUpload = this.fileUpload = function (obj) {
+
+				// 60�b�ȓ��Ƀ��X�|���X���Ȃ��ꍇ�́A�^�C���A�E�g���b�Z�[�W��\������B
+				var timer = setTimeout( function() {
+					var errors = [];
+					errors.push('�^�C���A�E�g���������܂����B');
+
+					if (errorsCallback) {
+						errorsCallback(errors);
+					}
+
+					return false;
+				}, 60000);
+				
+				var def = $.Deferred();
+				var promise = def;
+
+				// �t�@�C�����^�X�N���쐬
+				$.each(obj.files, function(i, file){
+					 
+					promise = promise.pipe(function(response){
+						 
+						var newPromise = $.Deferred();
+		
+						var formData = new FormData();
+						formData.enctype = 'multipart/form-data';
+						formData.append('uploadImageFile', file, file.name);
+						formData.append('uploadImageId', file.imageId);
+						$.ajax({
+							url: uploadUrl,
+							type: 'POST',
+							dataType: 'json',
+							data: formData,
+							cache: false,
+							contentType: false,
+							processData: false,
+							success: function(res) {
+								
+								clearInterval(timer);
+								
+								if (successCallback) {
+									successCallback(res);
+								}
+
+							},
+							error: function(xhr, textStatus, errorThrown) {
+								var res = {};
+								try {
+									res = $.parseJSON(xhr.responseText);
+								} catch (e) {}
+								alert(res.errorMessage);
+							},
+							complete: function() {
+								newPromise.resolve();
+							}
+						});
+						return newPromise;
+					});
+				});
+				def.resolve();
+			};
+			
+		};
+
+		return new init();
+	}
+	
+	$.mynaviUpload.defaults = {
+		uploadUrl: '/client/album/list/imageUpload/',
+		contentType : 'image/jpeg',
+		maxFileSize : null,
+		successCallback : null,
+		errorsCallback : null
+	}
+
+})(jQuery);
 /**
  * WYSIWYG - jQuery plugin 0.6
  *
@@ -5981,6 +6485,7 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
     });
 })(jQuery);
 
+
 (function($){
 	/*
 	 * zoomPhotoPanel
@@ -5998,48 +6503,31 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 
 		var params = $.extend({}, $.fn.zoomPhotoPanel.defaults, options);
 
-		var panel = null,
-			screen = null,
-			targetClass = null,
-			animateType = null,
-			originalSize = null,
-			imageUrl = null,
-			slideSpeed = null,
-			easing = null,
-			carousel = null,
-			autoSlide = null,
-			autoSlideInterval = null,
-			hoverPause = null,
-			slideCallBack = null,
-			openCallBack = null,
-			isFullScreen = null,
-			showClip = false,
-			sendGa = false,
-			defaultScrollTop = 0;
-
 		var className = "zoomPhotoPanel";
 		
 		// 初期設定
 		var init = function(obj) {
 
-			var panel = null,
-				screen = $(obj),
+			var screen = $(obj),
 				targetClass = params.targetClass,
+				target = screen.find(targetClass),
 				animateType = params.animateType,
 				originalSize = params.originalSize,
 				imageUrl = params.imageUrl,
 				slideSpeed = params.slideSpeed,
-				easing = params.easing,
 				carousel = params.carousel,
-				autoSlide = params.autoSlide;
+				autoSlide = params.autoSlide,
 				autoSlideInterval = params.autoSlideInterval,
 				hoverPause = params.hoverPause,
 				slideCallBack = params.slideCallBack,
 				openCallBack = params.openCallBack,
-				isFullScreen = params.isFullScreen,
-				showClip = params.showClip,
-				sendGa = params.sendGa,
-				galabel = params.galabel;
+				maxPageNo = target.length;
+
+			var nowLoading = true;
+				
+			if (target.length === 0) {
+				return;
+			}
 
 			var mynavigallery = $('.' + className);
 			
@@ -6048,28 +6536,91 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 				index = mynavigallery.length + 1;
 			}
 
-			var slider = null;
+			// target を配列に分割する。
+			var targetArray = [];
+			(function() {
+				var len = Math.floor(target.length / params.arrayCnt);
+				if ((target.length % params.arrayCnt) !== 0) {
+					len = len + 1;
+				}
+				for(var i=0; i < len; i++) {
+					var j = i * params.arrayCnt;
+					var p = target.slice(j, j + params.arrayCnt);
+					targetArray.push(p);
+				}
+			})();
+
+
+			// メインフレームを生成します。
+			var makeFlame = function (index) {
+
+				var template = [
+					'<div class="photo_enlargeArea portfolio display-none" >',
+						'<div class="js-photoSlider" style="overflow:hidden;margin 0 auto;">',
+							'<div class="parentKey photo_enlarge_imageArea">',
+							'</div>',
+						'</div>',
+						'<div class="photo_enlarge_partsArea">',
+							'<div class="transitionArea transitionList">',
+								'<p class="item prev js-backBtn"><a href="#" class="trigger"></a></p>',
+								'<p class="item next js-nextBtn"><a href="#" class="trigger"></a></p>',
+							'</div>',
+							'<div class="closeArea">',
+								'<p class="closeBtn"><a href="#" class="layerclose"><img src="' + imageUrl + '/btn_delete.png" alt="削除" width="20" height="20"></a></p>',
+							'</div>',
+							'<div class="commentArea">',
+								'<div class="comment">',
+									'<p class="caption_txt captionArea"></p>',
+									'<p class="provideArea"></p>',
+									'<p class="count" style="bottom: 10px;position: absolute;width: 100%;"></p>',
+							'</div>',
+						'</div>',
+					'</div>'].join('');
+
+				var mainFlame = $(_.template(template, {maxPageNo: maxPageNo}));
+
+				mainFlame.attr('id', 'zoomPhotoPanel'+ index); 
+				mainFlame.addClass(className);
 				
-			var make = function (index) {
+				$('body').append(mainFlame);
+
+				return mainFlame;
+			}
+
+			// 子要素を生成します。
+			var makeChild = function (mainFlame, page, callback) {
+
+				if (mainFlame.slider.suspend) {
+					mainFlame.slider.suspend(true);
+				}
+
+				var num = (function findArrayNum(page) {
+					return Math.floor((page-1) / params.arrayCnt);
+				})(page);
 
 				var photos = [];
 
 				/* ギャラリーに設定する画像データ配列を生成する */
-				screen.find(targetClass).each(function(i) {
-
-					var target = $(this),
+				for (var i=0, len=mainFlame.targetArray[num].length; i<len; i++) {
+					var target = $(mainFlame.targetArray[num][i]),
 						image = target.find('img'),
 						imageId = target.data('imageid') || '',
 						weddingId = target.data('weddingid') || '',
 						imagePath = image.attr('osrc') || image.attr('src') || '',
 						caption = image.attr('alt') || '',
-						title = target.data('title') || '';
-
-					// オリジナル画像に変換する。
+						title = target.data('title') || '',
+						chapelName = target.data('chapelname') || '',
+						provideName = target.data('providename') || '',
+						provideUrl = target.data('provideurl') || '',
+						playtime = target.find('img.gallery-photo').data('playtime') || '',
+						isMovie = target.find('img.gallery-photo').hasClass('js-movie');
+					
 					var originalPath = imagePath;
-//					if (0 <= imagePath.indexOf('_')) {
-//						originalPath = imagePath.split("_")[0] + '.jpg';
-//					}
+					if (0 <= imagePath.indexOf('_')) {
+						var originalDir = imagePath.substring(0, imagePath.lastIndexOf('/')+1);
+						var originalFile = imagePath.substring(imagePath.lastIndexOf('/')+1).replace(/([0-9]*)(.*).jpg(.*)/, '$1.jpg$3');
+						originalPath = originalDir + originalFile;
+					}
 
 					var data = {
 						imageId : imageId,
@@ -6077,85 +6628,83 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 						originalPath : originalPath,
 						caption : caption,
 						weddingId : weddingId,
-						title : title
+						title : title,
+						chapelName : chapelName,
+						provideName : provideName,
+						provideUrl : provideUrl,
+						playtime : playtime,
+						movie : (isMovie) ? 'targetMovie' : ''
 					};
 
 					// テンプレートに渡すため配列に格納
 					photos.push(data);
 
-				});
-
-				var maxPageNo = photos.length;
-
-				/* デザインテンプレート */
-				var template = '';
-				if (isFullScreen) {
-					template = [
-									'<div class="photo_enlargeArea portfolio display-none" >',
-										'<div class="js-photoSlider" style="overflow:hidden;margin 0 auto;">',
-											'<div class="parentKey photo_enlarge_imageArea">',
-											'<% _.each(photos, function(data, i) { %> ',
-												'<div class="childKey" style="text-align: center;">',
-														'<img src="<%=data.originalPath%>" alt="<%=data.caption%>" data-imageurl="<%=data.imagePath%>" data-imageid="<%=data.imageId%>" data-weddingid="<%=data.weddingId%>" data-title="<%=data.title%>" >',
-												'</div>',
-											'<% }); %>',
-											'</div>',
-										'</div>',
-										'<div class="photo_enlarge_partsArea">',
-											'<div class="transitionArea transitionList">',
-												'<p class="item prev js-backBtn"><a href="#" class="trigger"></a></p>',
-												'<p class="item next js-nextBtn"><a href="#" class="trigger"></a></p>',
-											'</div>',
-											'<div class="closeArea">',
-												'<p class="closeBtn"><a href="#" class="layerclose"><img src="' + imageUrl + '/btn_delete.png" alt="削除" width="20" height="20"></a></p>',
-											'</div>',
-											'<div class="commentArea" style="position: absolute;">',
-												'<p class="comment"><span></span><a href="#" class="btnClip display-none">この画像を<br>クリップする</a></p>',
-												'<p class="count" style="bottom: 10px;position: absolute;width: 100%;"></p>',
-											'</div>',
-										'</div>',
-									'</div>'].join('');
-				} else {
-					template = [
-									'<div class="window display-none">',
-										'<p class="layerclose" style="position:absolute;top:-5px;right:-2px;z-index:9999;"><a href="#"><img src="' + imageUrl + '/btn_delete.png" alt="閉じる" width="20" height="20"></a></p>',
-										'<div class="detailTtl">',
-											'<div class="photoSlide js-photoSlider" >',
-												'<div class="photoSlideViewId" style="overflow:hidden;margin 0 auto;">',
-													'<div class="parentKey use-gpu" style="padding-left: 10px; position: relative;">',
-														'<% _.each(photos, function(data, i) { %> ',
-															'<div class="childKey imagePath<%=(i+1)%>" style="float: left; margin: 0;">',
-																'<p class="photo">',
-																	'<img src="<%=data.imagePath%>" alt="<%=data.caption%>" width="289px" class="image imagePath" />',
-																'</p>',
-															'</div>',
-														'<% }); %>',
-													'</div>',
-												'</div>',
-												'<p class="btnSlideBack js-backBtn"><a href="#"><img src="' + imageUrl + '/btn_slide_back.png' + '" width="20" alt="back"></a></p>',
-												'<p class="btnSlideNext js-nextBtn"><a href="#"><img src="' + imageUrl + '/btn_slide_next.png' + '" width="20" alt="next"></a></p>',
-												'<ul class="slideControl">',
-													'<% _.each(photos, function(data, i) { %> ',
-														'<li class="active pageNo<%=(i+1)%>"><span>・</span></li>',
-													'<% }); %>',
-												'</ul>',
-											'</div>',
-										'</div>',
-									'</div>'].join('');
 				}
 
+				/* デザインテンプレート */
+				var template = [
+					'<% _.each(photos, function(data, i) { %>',
+						'<div class="childKey" style="text-align: center;">',
+							'<img src="<%=data.originalPath%>" alt="<%-data.caption%>" style="z-index: 0;" data-imageurl="<%=data.imagePath%>" data-imageid="<%=data.imageId%>" data-chapelname="<%=data.chapelName%>" data-providename="<%=data.provideName%>" data-provideurl="<%=data.provideUrl%>" data-playtime="<%= data.playtime %>" data-gaaction="<%= data.weddingId %>" data-galabel="<%= data.title %>" class="targetImg <%= data.movie %>" >',
+						'</div>',
+					'<%}); %>'].join('');
 
 				// 拡大写真パネルを生成する
-				panel = $(_.template(template, {maxPageNo: maxPageNo, photos: photos}));
+				var li = $(_.template(template, {photos: photos}));
+				li.attr('array', num);
+				li.each(function(i) {
+					$(this).attr('pageno', (num*params.arrayCnt) + (i+1));
+					if (i===0) {
+						$(this).addClass('firstArray');
+					}
+					if (i===(li.length-1)) {
+						$(this).addClass('lastArray');
+					}
+				});
+				li.css('text-align', 'center')
+					.css('margin-top', '0px')
+					.css('float', 'left');
 
-				panel.attr('id', 'zoomPhotoPanel'+ index); 
-				panel.addClass(className);
-				
-				$('body').append(panel);
+				// 子要素の横幅を端末のwidthに設定
+				li.width($(window).width());
+				li.height($(window).height());
+
+				var photos = li.find('img');
+				var photoLength = photos.length;
+				photos.each(function() {
+					var photo = $(this),
+						imagePath = photo.attr('src') || '';
+					var img = $('<img>');
+					img
+						.load(function() {
+							
+							photo.attr('owidth', img[0].width);
+							photo.attr('oheight', img[0].height);
+							var x = Math.floor(photo.attr('oheight') * $(window).width() / photo.attr('owidth'));
+							var margin = Math.floor(($(window).height() - x) / 2);
+							if (0 <= margin) {
+								photo.css('height', '').css('width', '100%');
+							} else {
+								photo.css('height', '100%').css('width', '');
+							}
+							if (photoLength !== 1) {
+								photoLength--;
+								return;
+							}
+							photos.unbind('load');
+
+							if (mainFlame.slider.suspend) {
+								mainFlame.slider.suspend(false);
+							}
+
+							callback(li);
+						});
+					img.attr('src', imagePath);
+				});
 			}
 
 			// イベントバンドル
-			var bundle = function(index) {
+			var bundle = function(mainFlame) {
 
 				var sliderAnimateType = '';
 				if (animateType === ANIMATE_TYPE.NO) {
@@ -6168,141 +6717,119 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 					sliderAnimateType = $.fn.mynavislider.ANIMATE_TYPE.FADE;
 				}
 
-				if (isFullScreen) {
+				// 画像スライダー
+				var slider = mainFlame.slider = mainFlame.find('.js-photoSlider').mynavislider({
+					'parentKey': '.parentKey'
+					, 'childKey': '.childKey'
+					, 'shift': 1
+					, 'isMouseDrag': true
+					, 'isFullScreen': true
+					, 'heightMaxScreen': true
+					, 'animateType': sliderAnimateType
+					, 'slideSpeed': slideSpeed
+					, 'carousel': carousel
+					, 'moment': false
+					, 'autoSlide': autoSlide
+					, 'autoSlideInterval': autoSlideInterval
+					, 'hoverPause': hoverPause
+					, 'slideCallBack': function(data) {
 
-					if (showClip) {
-						panel.find('.btnClip').bind('click', function(event) {
-							event.preventDefault();
-							event.stopPropagation();
-							// クリップ画像
-							$.mynaviClipImage($(this).data('imageid'), galabel);
-						}).show();
-					}
+						var obj = $(data.obj),
+							targetImage = obj.find('img'),
+							pageNo = parseInt(obj.attr('pageno')),
+							arrayNo = parseInt(obj.attr('array'));
 
-					// 画像上下に余白を追加する。
-					var appendMarginTop = function() {
-						slider.find('.childKey img').each(function() {
-							var photo = $(this);
-							var x = Math.floor(photo[0].height * $(window).width() / photo[0].width);
-							var margin = Math.floor(($(window).height() - x) / 2);
-							if (0 < margin) {
-								photo.closest('.childKey').css('margin-top', margin + 'px');
-							} else {
-								photo.closest('.childKey').css('margin-top', '0px');
-							}
-						});
-					}
+						// 画像上下の余白を調整する。
+						prepareDisplay(pageNo);
 
-					// 画像スライダーを設定する
-					slider = panel.find('.js-photoSlider').mynavislider({
-						'parentKey': '.parentKey'
-						, 'childKey': '.childKey'
-						, 'shift': 1
-						,'isMouseDrag': true
-						,'isFullScreen': true
-						,'heightMaxScreen': true
-						, 'backBtnKey': panel.find('.js-backBtn')
-						, 'nextBtnKey': panel.find('.js-nextBtn')
-						, 'animateType': sliderAnimateType
-						, 'slideSpeed': slideSpeed
-						, 'easing': easing
-						, 'carousel': carousel
-						, 'moment': true
-						, 'autoSlide': autoSlide
-						, 'autoSlideInterval': autoSlideInterval
-						, 'hoverPause': hoverPause
-						, 'slideCallBack': function(data) {
+						// 動画を停止させる
+						pauseVideo();
+						
+						// コメントエリアの表示更新
+						(function() {
+							mainFlame.find('.commentArea .count').text(data.pageNo + '／' + data.maxPageNo + '');
+						})();
 
-							// 画像上下に余白を追加する。
-							appendMarginTop();
-
-							// コメントエリアの表示更新
-							var targetImage = data.obj.find('img');
-							panel.find('.commentArea .comment>span').text(targetImage.attr('alt') || '');
-							panel.find('.commentArea .count').text(data.pageNo + '／' + data.maxPageNo + '');
-							panel.find('.btnClip')
-								.data('imageid', targetImage.data('imageid'));
-
-							// GA送信処理
-							if(sendGa){
-								var displayLi = $('#zoomPhotoPanel'+ index).find('.childKey');
-								if (1 < displayLi.length) {
-									displayLi = displayLi.filter('.childKey:eq(' + (data.pageNo) + ')' );
+						// 両端の場合はメインフレームに次の子要素を追加する。
+						(function() {
+							if (obj.hasClass('firstArray')) {
+								var nextPageNo = pageNo - 1;
+								if (nextPageNo < 1) {
+									nextPageNo = maxPageNo;
 								}
-								var displayImage = displayLi.find('img'),
-									imageUrl = displayImage.data('imageurl') || '',
-									weddingId = displayImage.data('weddingid'),
-									label = displayImage.data('title');
+								if (mainFlame.find('.childKey[pageno="' + nextPageNo + '"]').length === 0) {
+									makeChild(mainFlame, nextPageNo, function(li) {
+										var nextArrayNo = parseInt(li.attr('array'));
+										// LIタグの差し込み位置を算出
+										var appendPos = findAppendPos(mainFlame, nextArrayNo);
+										insertChild(mainFlame.find('.childKey.lastArray[array="'+appendPos+'"]'), li);
+										if (nextArrayNo < arrayNo && obj.hasClass('cloned')) {
+											mainFlame.slider.refresh(pageNo, maxPageNo, li.length*2);
+										} else {
+											mainFlame.slider.refresh(pageNo, maxPageNo, li.length);
+										}
 
-								$.mynaviClickableImage(weddingId, imageUrl, label);
+										// 画像上下の余白を調整する。
+										prepareDisplay(pageNo);
+
+										nowLoading = false;
+									});
+								}
+							}
+							if (obj.hasClass('lastArray')) {
+								var nextPageNo = pageNo + 1;
+								if (maxPageNo < nextPageNo) {
+									nextPageNo = 1;
+								}
+								if (mainFlame.find('.childKey[pageno="' + nextPageNo + '"]').length === 0) {
+									makeChild(mainFlame, nextPageNo, function (li) {
+										var nextArrayNo = parseInt(li.attr('array'));
+										insertChild(mainFlame.find('.childKey.lastArray[array="'+arrayNo+'"]'), li);
+										if (arrayNo < nextArrayNo && !obj.hasClass('cloned')) {
+											mainFlame.slider.refresh(pageNo, maxPageNo, 0);
+										} else {
+											mainFlame.slider.refresh(pageNo, maxPageNo, li.length);
+										}
+
+										// 画像上下の余白を調整する。
+										prepareDisplay(pageNo);
+
+										nowLoading = false;
+									});
+								}
 							}
 
-							if (slideCallBack) {
-								slideCallBack(data);
-							}
-						}, 'resizeCallBack': function (data) {
+						})();
 
-							// 画像上下に余白を追加する。
-							appendMarginTop();
-
-							panel.css('height', $(window).height() + 'px').css('width', $(window).width() + 'px');
-							$('#jquery-mLightBox-overlay').css('height', $(document).height() + 'px').css('width', $(window).width() + 'px');
-
+						nowLoading = false;
+						if (slideCallBack) {
+							slideCallBack(data);
 						}
-					});
-					
-				} else {
-					// 画像スライダーを設定する
-					slider = panel.find('.js-photoSlider').mynavislider({
-						'parentKey': '.parentKey'
-						, 'childKey': '.childKey'
-						, 'shift': 1
-						, 'shiftw': 290
-						, 'backBtnKey': panel.find('.js-backBtn')
-						, 'nextBtnKey': panel.find('.js-nextBtn')
-						, 'animateType': sliderAnimateType
-						, 'slideSpeed': slideSpeed
-						, 'easing': easing
-						, 'carousel': carousel
-						, 'autoSlide': autoSlide
-						, 'autoSlideInterval': autoSlideInterval
-						, 'hoverPause': hoverPause
-						, 'slideCallBack': function(data) {
+					}, 'resizeCallBack': function (data) {
 
-							slider.find('.slideControl li').removeClass('active');
-							slider.find('.slideControl .pageNo'+data.pageNo).addClass('active');
+						var obj = $(data.obj),
+							targetImage = obj.find('img'),
+							pageNo = parseInt(obj.attr('pageno'));
 
-							var photo = data.obj.find('img.imagePath');
+						// 画像上下の余白を調整する。
+						prepareDisplay(pageNo);
 
-							var replacePhotoArea = function() {
+						mainFlame.css('height', $(window).height() + 'px').css('width', $(window).width() + 'px');
+						$('#jquery-mLightBox-overlay').css('height', $(document).height() + 'px').css('width', $(window).width() + 'px');
 
-								if (animateType === ANIMATE_TYPE.ORIGINAL) {
-									// 表示する画像の幅を算出する。
-									var height = Math.ceil(280 * img.height / img.width);
-									photo.css('max-height', height);
-									panel.find('.photoSlideViewId').css('height', height + 20);
-									
-								}
+					}
+				});
 
-								if (slideCallBack) {
-									slideCallBack(data);
-								}
-							};
-
-							var img = new Image();
-							img.src = photo.attr('src');
-							if (0 < img.width) {
-								replacePhotoArea();
-							} else {
-								img.load = function() {
-									replacePhotoArea();
-								};
-							}
-
-							}
-					});
-				}
-
+				// 拡大写真パネル 子要素をタップ時にメッセージパネルを非表示にする。
+				slider.click(function(e) {
+					var partsArea = mainFlame.find('.photo_enlarge_partsArea');
+					if (partsArea.is(':visible')) {
+						partsArea.hide();
+					} else {
+						partsArea.show();
+					}
+				});
+				
 				// 対象画像クリック時に拡大写真パネルを表示する
 				screen.find(targetClass).each(function(i) {
 					var target = $(this),
@@ -6311,36 +6838,250 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 					target.unbind('click');
 					target.bind('click', function(e) {
 						e.preventDefault();
-						showPage(pageNo);
+						if (nowLoading) {
+							return;
+						}
+						if (mainFlame.find('.childKey[pageno="' + pageNo + '"]').length === 0) {
+							makeChild(mainFlame, pageNo, function(li) {
+								var arrayNo = parseInt(li.attr('array'));
+								// LIタグの差し込み位置を算出
+								var appendPos = findAppendPos(mainFlame, arrayNo);
+								insertChild(mainFlame.find('.childKey.lastArray[array="'+appendPos+'"]'), li);
+								mainFlame.slider.refresh(null, maxPageNo, li.length);
+								showPage(pageNo);
+							});
+						} else {
+							showPage(pageNo);
+						}
 					});
 				});
 
-				panel.find('.layerclose').click(function(e) {
+				// 拡大写真パネルスライダー 前ページクリック時
+				mainFlame.find('.js-backBtn').click(function(e) {
 					e.preventDefault();
+					if (nowLoading) {
+						return;
+					}
+					nowLoading = true;
+					mainFlame.slider.backPage();
+				});
+
+				// 拡大写真パネルスライダー 次ページクリック時
+				mainFlame.find('.js-nextBtn').click(function(e) {
+					e.preventDefault();
+					if (nowLoading) {
+						return;
+					}
+					nowLoading = true;
+					mainFlame.slider.nextPage();
+				});
+
+				// 拡大写真パネル 閉じるボタンクリック時
+				mainFlame.find('.layerclose').click(function(e) {
+					e.preventDefault();
+
+					// 動画を停止させる
+					pauseVideo();
+					
 					$.mLightBox.close();
+				});
+
+			};
+
+			// 画面表示を調整する。
+			var prepareDisplay = function(pageNo) {
+				mainFlame.slider.find('.childKey[pageno="' +pageNo+'"]').each(function() {
+					var li = $(this),
+						photo = li.find('img'),
+						imagePath = photo.attr('src') || '',
+						isMovie = photo.hasClass('targetMovie');
+
+					if (isMovie) {
+						// 動画の場合
+						
+						var options = $.extend($.fn.mynaviMovie.defaults, {});
+						// 動画再生時
+						options.clickCallback = function(obj) {
+							
+							// カルーセル内にあるcloneサムネイルもvideoに変換する。
+							mainFlame.slider.find('.childKey[pageno="' +pageNo+'"]').each(function() {
+								var movieBox = $(this).find('.movieBox');
+								var image = movieBox.prev();
+								movieBox.remove();
+								var video = obj.video.clone(true);
+								$.fn.mynaviMovie.bindVideoClick(video);
+								image.after(video);
+
+								// カルーセル内の動画を同期させる
+								$.fn.mynaviMovie.syncPlayingTime(obj.video[0], video[0]);
+								
+							});
+							
+							// 余白の調整
+							appendMargin();
+							
+						};
+						// 画像を動画再生用サムネイルに変換
+						photo.addClass('play');
+						photo.mynaviMovie(options, function (videoBoxs) {
+							$(videoBoxs).each(function() {
+								$(this).addClass('noRestore');
+							});
+							// 余白の調整
+							appendMargin();
+						});
+						photo.removeClass('targetMovie');
+						
+					} else {
+						// 画像の場合
+
+						// 余白の調整
+						appendMargin();
+					}
+				});
+			}
+				
+			// 上下左右に余白を追加する。
+			var appendMargin = function() {
+				// 画面上下にマージン設定（画像）
+				mainFlame.slider.find('.childKey img.targetImg').each(function() {
+					var photo = $(this),
+						oheight = photo.attr('oheight') || 0,
+						owidth = photo.attr('owidth') || 0,
+						moviePath = photo.data('moviepath') || '',
+						isMovie = (moviePath !== '') ? true : false;
+
+					photo.closest('.childKey').css('margin-top', '');
+
+					if (!isMovie) {
+						// 画像
+
+						var x = Math.floor(oheight * $(window).width() / owidth);
+						var margin = Math.floor(($(window).height() - x) / 2) || 0;
+						if (0 < margin) {
+							photo.closest('.childKey').css('margin-top', margin + 'px');
+						} else {
+							photo.closest('.childKey').css('margin-top', '0px');
+						}
+					} else {
+						var self = photo.next(),
+							isMovieBox = self.hasClass('movieBox');
+						
+						if (isMovieBox) {
+							// 動画サムネイル
+							
+							self.css('margin-left', '');
+
+							var x = Math.floor(oheight * $(window).width() / owidth);
+							var margin = Math.floor(($(window).height() - x) / 2);
+							if (0 <= margin) {
+								self.css('width', $(window).width());
+								mainFlame.find('.movieOver').css('width', $(window).width());
+								var height = Math.floor(self.width() * oheight / owidth);
+								self.css('height', height + 'px');
+								mainFlame.find('.movieOver').css('height', height + 'px');
+							} else {
+								self.css('height', $(window).height());
+								mainFlame.find('.movieOver').css('height', $(window).height());
+								var width = Math.floor(self.height() * owidth / oheight);
+								self.css('width', width + 'px');
+								mainFlame.find('.movieOver').css('width', width + 'px');
+							}
+							$.fn.mynaviMovie.setPartsPosition(self, self.width(), self.height());
+
+							var x = Math.floor(oheight * $(window).width() / owidth);
+							var margin = Math.floor(($(window).height() - x) / 2) || 0;
+							if (0 < margin) {
+								photo.closest('.childKey').css('margin-top', margin + 'px');
+								mainFlame.find('.movieOver').css('margin-top', margin + 'px');
+							} else {
+								var marginLeft = Math.floor(($(window).width() - self.width()) / 2);
+								if (0 <= marginLeft) {
+									self.css('margin-left', marginLeft + 'px');
+									mainFlame.find('.movieOver').css('margin-left', marginLeft + 'px');
+								}
+							}
+							
+						} else {
+							// 動画
+
+							var x = Math.floor(oheight * $(window).width() / owidth);
+							var margin = Math.floor(($(window).height() - x) / 2);
+							if (0 <= margin) {
+								self.css('width', '100%');
+								var height = Math.floor($(window).width() * oheight / owidth);
+								self.css('height', height + 'px');
+							} else {
+								self.css('height', '100%');
+								var width = Math.floor($(window).height() * owidth / oheight);
+								self.css('width', width + 'px');
+							}
+
+							var x = Math.floor(oheight * $(window).width() / owidth);
+							var margin = Math.floor(($(window).height() - x) / 2) || 0;
+							if (0 < margin) {
+								photo.closest('.childKey').css('margin-top', margin + 'px');
+							} else {
+								photo.closest('.childKey').css('margin-top', '0px');
+							}
+
+						}
+					}
+					
+				});
+			};
+			
+			// 再生中の動画を停止する。
+			var pauseVideo = function() {
+				mainFlame.slider.find('.childKey video').each(function() {
+					var video = $(this);
+					if (video[0].paused) {
+						return;
+					}
+					video[0].pause();
 				});
 			};
 
-			// 画面スクロールを有効にする
-			var onScroll = function() {
-				$(window).off('.noScroll');
+			// 次のDOMを追加する位置を算出します。
+			var findAppendPos = function (mainFlame, n) {
+				if(mainFlame.find('.childKey').length === 0) {
+					return null;
+				}
+				n = n -1;
+				if (n < 0) {
+					n = mainFlame.targetArray.length -1;
+				}
+				if(mainFlame.find('.childKey[array="'+n+'"]').length === 0) {
+					return findAppendPos(mainFlame, n);
+				}
+				return n;
 			};
 
-			// 画面スクロールを無効にする
-			var offScroll = function() {
-				$(window).on('touchmove.noScroll', function(e) {
-				    e.preventDefault();
+			// beforeDom の後に afterDom を追加します。
+			var insertChild = function(beforeDom, afterDom) {
+				beforeDom.each(function() {
+					var s = $(this);
+					var p = afterDom.clone(true);
+					if (s.hasClass('cloned')) {
+						p.addClass('cloned');
+					}
+					$(s).after(p);
 				});
 			};
 
 			// 指定したページを表示します。
-			var showPage = obj.showPage = function(pageNo) {
+			var showPage = function(pageNo) {
+
+				if (nowLoading) {
+					return;
+				}
+
 				var pageNo = pageNo || 1;
 
 				// 初期表示時のスクロール位置を保持しておく。
 				defaultScrollTop = $(window).scrollTop();
 				
-				slider.changePage(pageNo);
+				mainFlame.slider.changePage(pageNo);
 
 				var options = {'mLightBoxId': '#zoomPhotoPanel' + index, duration: 300,
 					callback: function() {
@@ -6354,20 +7095,29 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 						}
 					},
 					closecallback: function() {
+						// 動画を停止させる
+						pauseVideo();
+						// フッタを戻す。
+						Mynavi.showFooterNavBar();
+						// メッセージの通知を表示する
+						Mynavi.showMessageNotice();
 					}
 				};
 				
-				if (isFullScreen) {
-					options.opacity = 1;
-					options.addScroll = false;
-				}
+				options.opacity = 1;
+				options.addScroll = false;
+				options.zIndex = 10000;
 				$.mLightBox(options);
 				
 			};
 
-			make(index);
-			
-			bundle(index);
+			var mainFlame = makeFlame(index);
+			mainFlame.targetArray = targetArray;
+			makeChild(mainFlame, 1, function(childFlame) {
+				mainFlame.find('.parentKey').append(childFlame);
+				bundle(mainFlame);
+				nowLoading = false;
+			});
 
 		};
 
@@ -6391,19 +7141,18 @@ a&&a.call(f,l)},0)})}).submit();return this}})(jQuery);
 	$.fn.zoomPhotoPanel.defaults = {
 		'targetClass': '.js-zoomPhoto' // 拡大する画像要素
 		, 'animateType': ANIMATE_TYPE.SLIDE // アニメーションの種類
-		, 'imageUrl': '/sp/img' // 画像パス
+		, 'imageUrl': '../img' // 画像パス
 		, 'slideSpeed': 300 // スライド速度
-		, 'easing': 'easeInOutCirc' // スライドアニメーションの種類
 		, 'carousel': false // ローテートさせるかどうか
 		, 'autoSlide': false // 自動スライドさせるどうか
 		, 'autoSlideInterval':  5000 // 自動スライドさせる間隔(ミリ秒)
 		, 'hoverPause':  false // 子要素にマウスオーバーすると自動スライドを一時停止する。
 		, 'slideCallBack': null // スライド後に処理を行うコールバック(本プラグインで想定していない処理はここでカスタマイズする)
 		, 'openCallBack': null // 拡大表示後のコールバック
-		,'isFullScreen': false // フルスクリーンで表示する
 		, 'showClip': false // 画像クリップ機能を表示する
 		, 'sendGa': false // 画像クリップ機能を表示する
 		, 'galabel': '' // 画像クリップ時のGAイベントラベル値
+		, 'arrayCnt': 20 // 初期表示でロードする拡大画像内要素の数
 	};
 
 })(jQuery);
