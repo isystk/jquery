@@ -6,7 +6,7 @@ Overview
 ## Description
 
 ## Demo
-(http://isystk.github.io/jquery/)
+(http://isystk.github.io/jquery-sample/)
 
 ## VS. 
 
